@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Decisione;
 use App\Models\Event;
 use App\Models\Machine;
 use App\Models\Project;
@@ -69,12 +70,16 @@ class Sincronizzazione
                         'chi' => $e['chi'] ?? null,
                         'testo' => (string) ($e['testo'] ?? ''),
                         'macchine' => array_values(array_filter((array) ($e['macchine'] ?? []), 'is_string')),
+                        // visto_at nasce sul web e non si tocca: il file dice solo se l'evento va segnalato
+                        'da_vedere' => (bool) ($e['daVedere'] ?? false),
                     ],
                 );
             }
             $progetto->events()->whereNotIn('codice', $codiciEventi)->delete();
 
-            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi)];
+            $decisioni = $this->decisioni($progetto, is_array($dati['decisioni'] ?? null) ? $dati['decisioni'] : []);
+
+            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi), 'decisioni' => $decisioni];
         });
     }
 
@@ -106,6 +111,38 @@ class Sincronizzazione
         $macchina->questions()->whereNotIn('chiave', $chiavi)->delete();
 
         return count($chiavi);
+    }
+
+    /** Decisioni che aspettano Francesco. Come per le domande, la spunta data dal web vince sul file. */
+    private function decisioni(Project $progetto, array $elenco): int
+    {
+        $codici = [];
+        foreach (array_values($elenco) as $i => $d) {
+            $testo = trim((string) ($d['testo'] ?? ''));
+            if ($testo === '') {
+                continue;
+            }
+            $codice = $this->codice($d['id'] ?? null, 'decisione');
+            $codici[] = $codice;
+            $decisione = Decisione::firstOrNew(['project_id' => $progetto->id, 'codice' => $codice]);
+            $data = (string) ($d['data'] ?? '');
+            $decisione->fill([
+                'ordine' => $i,
+                'testo' => $testo,
+                'fonte' => isset($d['fonte']) ? mb_substr((string) $d['fonte'], 0, 250) : null,
+                'macchine' => array_values(array_filter((array) ($d['macchine'] ?? []), 'is_string')),
+                'data' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $data) ? $data : null,
+            ]);
+            if (! $decisione->fatta_web) {
+                $decisione->fatta = (bool) ($d['fatta'] ?? false);
+                $il = (string) ($d['fattaIl'] ?? '');
+                $decisione->fatta_il = $decisione->fatta && preg_match('/^\d{4}-\d{2}-\d{2}$/', $il) ? $il : null;
+            }
+            $decisione->save();
+        }
+        $progetto->decisioni()->whereNotIn('codice', $codici)->delete();
+
+        return count($codici);
     }
 
     private function codice(mixed $valore, string $cosa): string

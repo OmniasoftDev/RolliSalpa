@@ -27,6 +27,7 @@
 @section('contenuto')
 <div class="wrap">
     @include('pannello.aggiornamenti')
+    @include('pannello.da-guardare')
     <header class="head">
         <div>
             <h1>{{ $progetto->info('titolo', $progetto->nome.' · Industria 4.0') }}</h1>
@@ -198,6 +199,24 @@
     filtra(leggi('-filtro') || 'all');
 
     const token = document.querySelector('meta[name=csrf-token]').content;
+
+    // --- Da guardare: novita' viste e decisioni prese ---
+    const posta = (url, corpo) => fetch(url, { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(corpo || {}) });
+    document.addEventListener('click', async e => {
+        const v = e.target.closest('[data-visto]');
+        if (v) { v.disabled = true; const r = await posta(v.dataset.visto, { visto: true }); if (r.ok) v.closest('.ev').remove(); else { v.disabled = false; v.textContent = 'Non salvato, riprova'; } return; }
+        const t = e.target.closest('[data-tutti-visti]');
+        if (t) { t.disabled = true; const r = await posta(t.dataset.tuttiVisti); if (r.ok) location.reload(); else t.disabled = false; }
+    });
+    document.addEventListener('change', async e => {
+        const box = e.target.closest('input[data-decisione]');
+        if (!box) return;
+        box.disabled = true;
+        const r = await posta(box.dataset.decisione, { fatta: box.checked }).catch(() => null);
+        box.disabled = false;
+        if (r && r.ok) box.closest('.ask').classList.toggle('done', box.checked);
+        else { box.checked = !box.checked; box.closest('.ask').querySelector('.err').textContent = 'Non salvato, riprova.'; }
+    });
 
     document.addEventListener('change', async e => {
         const box = e.target.closest('input[data-q]');

@@ -28,6 +28,11 @@ class Project extends Model
         return $this->hasMany(Event::class)->orderByDesc('chiave');
     }
 
+    public function decisioni(): HasMany
+    {
+        return $this->hasMany(Decisione::class)->orderBy('ordine');
+    }
+
     /** Valore di progetto/info, con un default. */
     public function info(string $chiave, mixed $default = null): mixed
     {

@@ -150,3 +150,17 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .msg-claude { background: var(--panel); justify-self: start }
 .msg .btn { justify-self: start; font-size: .78rem; padding: 4px 10px; width: auto }
 .chat-invio { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px; display: grid; gap: 8px; border-top: 1px solid var(--line) }
+
+/* Da guardare: decisioni, novita' non viste, mail escluse */
+.da-guardare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px }
+@media (max-width: 1000px) { .da-guardare { grid-template-columns: minmax(0, 1fr) } }
+.dg-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; max-height: 420px; overflow-y: auto }
+.dg-col.attivo { border-top: 3px solid var(--wait) }
+.dg-col h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.conta { font: 600 .78rem var(--f-mono); background: var(--off-bg); color: var(--muted); border-radius: 10px; padding: 0 8px }
+.dg-col.attivo .conta { background: var(--wait-bg); color: var(--wait) }
+.ev.nuovo { border-left: 3px solid var(--wait); padding-left: 8px }
+.ev.rolling { border-left-color: var(--risk) }
+.ev.rolling .chip { background: var(--risk-bg); color: var(--risk); border-color: var(--risk) }
+.link-azione { background: none; border: 0; padding: 0; color: var(--accent); font-size: .8rem; text-decoration: underline; cursor: pointer }
+.note.fatta { text-decoration: line-through; color: var(--muted) }

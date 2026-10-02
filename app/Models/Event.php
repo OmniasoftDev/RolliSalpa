@@ -7,16 +7,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Event extends Model
 {
-    protected $fillable = ['project_id', 'codice', 'chiave', 'tipo', 'chi', 'testo', 'macchine'];
+    protected $fillable = ['project_id', 'codice', 'chiave', 'tipo', 'chi', 'testo', 'macchine', 'da_vedere', 'visto_at'];
 
     protected function casts(): array
     {
-        return ['macchine' => 'array'];
+        return ['macchine' => 'array', 'da_vedere' => 'boolean', 'visto_at' => 'datetime'];
     }
 
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /** Novita' segnalata dall'automazione e non ancora vista da Francesco. */
+    public function nonVisto(): bool
+    {
+        return $this->da_vedere && ! $this->visto_at;
     }
 
     /** "2026-10-02 10:56" -> "02/10/2026 10:56" */

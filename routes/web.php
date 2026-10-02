@@ -15,6 +15,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/', [PannelloController::class, 'index'])->name('home');
     Route::post('/domande/{question}', [PannelloController::class, 'segna'])->name('domande.segna');
+    Route::post('/decisioni/{decisione}', [PannelloController::class, 'decisione'])->name('decisioni.segna');
+    Route::post('/eventi/{event}/visto', [PannelloController::class, 'visto'])->name('eventi.visto');
+    Route::post('/{slug}/eventi/visti', [PannelloController::class, 'tuttiVisti'])->where('slug', '[a-z0-9-]+')->name('eventi.visti');
     Route::post('/{slug}/appunti', [AppuntiController::class, 'store'])->where('slug', '[a-z0-9-]+')->name('appunti.store');
     Route::get('/{slug}/chat', [ChatController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('chat');
     Route::post('/{slug}/chat', [ChatController::class, 'invia'])->where('slug', '[a-z0-9-]+')->middleware('throttle:20,1')->name('chat.invia');

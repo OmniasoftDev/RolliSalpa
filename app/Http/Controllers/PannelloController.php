@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appunto;
+use App\Models\Decisione;
+use App\Models\Event;
 use App\Models\Project;
 use App\Models\Question;
 use Illuminate\Http\JsonResponse;
@@ -31,9 +33,36 @@ class PannelloController extends Controller
             'eventi' => $progetto->events()->limit(200)->get(),
             'appunti' => Appunto::with('allegati')->where('project_id', $progetto->id)->latest()->limit(200)->get(),
             'statoPc' => Cache::get('stato_pc', []),
+            'decisioni' => $progetto->decisioni()->get(),
             'appuntiElaborati' => Appunto::where('project_id', $progetto->id)->max('elaborato_at'),
             'appuntiInAttesa' => Appunto::where('project_id', $progetto->id)->whereNull('elaborato_at')->count(),
         ]);
+    }
+
+    /** POST /eventi/{event}/visto — Francesco ha visto la novita' (o la rimette tra le non viste). */
+    public function visto(Request $request, Event $event): JsonResponse
+    {
+        $event->update(['visto_at' => $request->boolean('visto', true) ? now() : null]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** POST /{slug}/eventi/visti — segna come viste tutte le novita' del progetto. */
+    public function tuttiVisti(string $slug): JsonResponse
+    {
+        $progetto = Project::where('slug', $slug)->firstOrFail();
+        $n = $progetto->events()->where('da_vedere', true)->whereNull('visto_at')->update(['visto_at' => now()]);
+
+        return response()->json(['ok' => true, 'viste' => $n]);
+    }
+
+    /** POST /decisioni/{decisione} — decisione presa (o riaperta) dal browser. */
+    public function decisione(Request $request, Decisione $decisione): JsonResponse
+    {
+        $fatta = $request->boolean('fatta');
+        $decisione->update(['fatta' => $fatta, 'fatta_il' => $fatta ? now()->toDateString() : null, 'fatta_web' => true]);
+
+        return response()->json(['ok' => true]);
     }
 
     /** POST /domande/{question} — spunta o toglie la spunta dal browser. */

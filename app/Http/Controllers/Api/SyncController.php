@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Decisione;
 use App\Models\Question;
 use App\Services\Sincronizzazione;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,15 @@ class SyncController extends Controller
                 $campi[$k] = $v;
             }
         }
-        Cache::forever('stato_pc', $campi + ['ricevuto' => now()->format('Y-m-d H:i')]);
+        // mail che parlano del progetto ma escluse dal filtro mittenti: {quando, da, oggetto, progetto?}
+        $escluse = [];
+        foreach (array_slice((array) $request->input('escluse', []), 0, 50) as $m) {
+            if (is_array($m)) {
+                $escluse[] = collect($m)->only(['quando', 'da', 'oggetto', 'progetto'])
+                    ->map(fn ($v) => mb_substr((string) $v, 0, 200))->all();
+            }
+        }
+        Cache::forever('stato_pc', $campi + ['escluse' => $escluse, 'ricevuto' => now()->format('Y-m-d H:i')]);
 
         return response()->json(['ok' => true]);
     }
@@ -62,6 +71,15 @@ class SyncController extends Controller
                 'aggiornata' => $q->updated_at?->format('Y-m-d H:i'),
             ]);
 
-        return response()->json(['spunte' => $spunte]);
+        $decisioni = Decisione::with('project')->where('fatta_web', true)->get()
+            ->map(fn (Decisione $d) => [
+                'progetto' => $d->project->slug,
+                'id' => $d->codice,
+                'testo' => $d->testo,
+                'fatta' => $d->fatta,
+                'fattaIl' => $d->fatta_il?->format('Y-m-d'),
+            ]);
+
+        return response()->json(['spunte' => $spunte, 'decisioni' => $decisioni]);
     }
 }
