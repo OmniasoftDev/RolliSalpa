@@ -56,6 +56,20 @@ class ChatTest extends TestCase
             ->assertSee('Chat con Claude');
     }
 
+    public function test_errore_api_mostra_il_messaggio_vero(): void
+    {
+        config(['services.anthropic.key' => 'sk-ant-finta']);
+        $this->mock(ChatClaude::class, function ($mock) {
+            $req = new \GuzzleHttp\Psr7\Request('POST', 'https://api.anthropic.com/v1/messages');
+            $res = new \GuzzleHttp\Psr7\Response(400, [], json_encode(['type' => 'error', 'error' => ['type' => 'invalid_request_error', 'message' => 'Your credit balance is too low']]));
+            $mock->shouldReceive('rispondi')->andThrow(\Anthropic\Core\Exceptions\APIStatusException::from($req, $res));
+        });
+        $this->actingAs(User::factory()->create());
+
+        $this->postJson('/rolli/chat', ['testo' => 'Ciao'])->assertStatus(502)
+            ->assertJsonPath('errore', "Errore dell'API di Claude: Your credit balance is too low");
+    }
+
     public function test_la_chat_richiede_login(): void
     {
         $this->get('/rolli/chat')->assertRedirect('/login');

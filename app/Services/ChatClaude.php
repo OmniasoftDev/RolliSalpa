@@ -43,7 +43,16 @@ TXT;
         while ($storia->isNotEmpty() && $storia->first()->ruolo !== 'user') {
             $storia->shift(); // la conversazione inviata deve iniziare con un messaggio di Francesco
         }
-        $messaggi = $storia->map(fn (ChatMessaggio $m) => ['role' => $m->ruolo, 'content' => $m->testo])->all();
+        // domande rimaste senza risposta (errori, credito esaurito) si uniscono alla successiva: i ruoli devono alternarsi
+        $messaggi = [];
+        foreach ($storia as $m) {
+            $ultimo = array_key_last($messaggi);
+            if ($ultimo !== null && $messaggi[$ultimo]['role'] === $m->ruolo) {
+                $messaggi[$ultimo]['content'] .= "\n\n".$m->testo;
+            } else {
+                $messaggi[] = ['role' => $m->ruolo, 'content' => $m->testo];
+            }
+        }
 
         $client = new Client(apiKey: $chiave);
         $risposta = $client->beta->messages->create(

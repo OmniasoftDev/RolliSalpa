@@ -48,10 +48,12 @@ class ChatController extends Controller
             return response()->json(['errore' => $e->getMessage(), 'domanda' => $this->json($domanda)], 503);
         } catch (APIStatusException $e) {
             Log::warning('Chat Claude: errore API', ['tipo' => $e->type?->value, 'messaggio' => $e->getMessage()]);
+            // il messaggio dell'API (es. credito esaurito) e' la spiegazione piu' utile per Francesco
+            $dettaglio = is_array($e->body ?? null) ? ($e->body['error']['message'] ?? null) : null;
             $msg = match ($e->type?->value) {
                 'rate_limit_error', 'overloaded_error' => 'Claude è momentaneamente sovraccarico: riprova tra qualche secondo.',
                 'authentication_error', 'permission_error' => 'La chiave ANTHROPIC_API_KEY sul server non è valida.',
-                default => 'Errore dell\'API di Claude: riprova. Se continua, guarda storage/logs sul server.',
+                default => 'Errore dell\'API di Claude'.($dettaglio ? ': '.$dettaglio : ': riprova. Se continua, guarda storage/logs sul server.'),
             };
 
             return response()->json(['errore' => $msg, 'domanda' => $this->json($domanda)], 502);
