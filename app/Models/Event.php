@@ -25,6 +25,12 @@ class Event extends Model
         return $this->da_vedere && ! $this->visto_at;
     }
 
+    /** Testo da mostrare: senza il prefisso tecnico "[auto]" che l'automazione mette sugli eventi. */
+    public function testoMostrato(): string
+    {
+        return (string) preg_replace('/^\[auto\]\s*/i', '', $this->testo);
+    }
+
     /** "2026-10-02 10:56" -> "02/10/2026 10:56" */
     public function quando(): string
     {

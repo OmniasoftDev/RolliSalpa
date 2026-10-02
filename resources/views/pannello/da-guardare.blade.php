@@ -38,7 +38,7 @@
                     <span class="mono">{{ $e->quando() }}</span><span>{{ $e->chi }}</span>
                     @if ($nomiMacchine($e->macchine))<span class="tag">{{ $nomiMacchine($e->macchine) }}</span>@endif
                 </div>
-                <div class="note">{{ preg_replace('/^\[auto\]\s*/', '', $e->testo) }}</div>
+                <div class="note">{{ $e->testoMostrato() }}</div>
                 <div><button type="button" class="link-azione" data-visto="{{ route('eventi.visto', $e) }}">Visto</button></div>
             </div>
         @empty
