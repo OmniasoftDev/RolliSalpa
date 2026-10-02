@@ -1,0 +1,46 @@
+# Protezione dei file sensibili nella cartella dell'applicazione.
+#
+# Copiato da omnia-hosting, dove e' stato collaudato.
+# Perche' serve: questa cartella sta dentro /home/omniapp/public_html, che e'
+# il document root del dominio principale omniasoft.app. Senza regole,
+# https://omniasoft.app/rollisalpa.omniasoft.app/.env sarebbe servito dal web.
+#
+# ⚠️ PERCHE' NON E' PIU' UN DIVIETO TOTALE (23/09/2026).
+# Qui c'era "Require all denied", nella convinzione che Apache leggesse gli
+# .htaccess solo dal document root del sottodominio in giu' e che quindi
+# questo file non lo riguardasse. E' FALSO su questo server: appena il file
+# e' arrivato davvero al suo posto, il pannello ha risposto 403 a ogni
+# richiesta, comprese le immagini e i file statici.
+#
+# L'indizio c'era gia' e non e' stato letto: DEPLOY.md racconta che
+# l'.htaccess del provider in public_html forzava PHP 8.1 sulla nostra
+# applicazione, che sta due livelli piu' in basso. Se quello arriva fin qui,
+# arriva anche questo.
+#
+# Quindi: nessuna direttiva che valga per l'intera cartella, solo regole
+# mirate sui singoli file. Niente qui dentro deve poter negare l'accesso a
+# cio' che vive in public/, che e' il sito vero e proprio.
+
+# .env e le sue varianti: e' il file che contiene le credenziali del
+# database, la APP_KEY e il token di sincronizzazione del pannello.
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Il resto di cio' che non ha motivo di essere servito dal web: dump del
+# database, log, stato del deploy, file di Composer.
+<FilesMatch "^(composer\.(json|lock)|artisan|package\.json|\.ftp-deploy-sync-state\.json|.*\.(sql|log))$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -1,0 +1,118 @@
+name: Deploy Rolli Salpa
+
+# Stesso schema di omnia-hosting (C:\apps\hosting\DEPLOY.md): la Action compila vendor,
+# pubblica lo zip completo come artifact e, se la variabile FTP_ATTIVO = si, carica via FTPS
+# tutto TRANNE vendor (su questo FTP ogni cartella costa ~2 s: vendor non arriverebbe mai in fondo).
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # I test girano qui, non sul PC (niente ambiente locale): se falliscono, il deploy non parte.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+      - name: Dipendenze (con quelle di sviluppo)
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Test
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica codice
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # Deve coincidere con il MultiPHP Manager del sottodominio e con public/.htaccess (sp-ea-php83).
+      - name: Prepara PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, openssl, pdo_mysql, zip
+          coverage: none
+
+      - name: Installa dipendenze
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Prepara pacchetto zip
+        run: |
+          rm -rf /tmp/pkg && mkdir -p /tmp/pkg
+          rsync -a \
+            --exclude '.git' --exclude '.github' --exclude 'node_modules' \
+            --exclude 'tests' --exclude '.env' --exclude '*.md' \
+            --exclude 'phpunit.xml' --exclude 'package.json' --exclude 'vite.config.js' \
+            --exclude 'storage/logs/*' --exclude 'storage/framework/cache/*' \
+            --exclude 'storage/framework/sessions/*' --exclude 'storage/framework/views/*' \
+            ./ /tmp/pkg/
+          cd /tmp/pkg && zip -qr "$RUNNER_TEMP/rollisalpa.zip" .
+          cd "$RUNNER_TEMP"
+          echo "--- primo livello del pacchetto ---"
+          unzip -l rollisalpa.zip | awk '{print $4}' | cut -d/ -f1-2 | sort -u | head -30
+
+      - name: Pubblica il pacchetto
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollisalpa
+          path: ${{ runner.temp }}/rollisalpa.zip
+          retention-days: 30
+
+      - name: Carica su server FTP
+        if: ${{ vars.FTP_ATTIVO == 'si' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # RELATIVO alla home dell'utente FTP, che deve essere
+          # /home/omniapp/public_html/rollisalpa.omniasoft.app (vedi DEPLOY.md).
+          server-dir: ./
+          state-name: .ftp-deploy-sync-state.json
+          protocol: ftps
+          port: 21
+          timeout: 120000
+          security: loose
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.env
+            **/.env.*
+            **/storage/logs/**
+            **/storage/framework/cache/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            **/bootstrap/cache/*.php
+            **/vendor/**
+            **/rollisalpa.zip
+            **/*.md
+            **/phpunit.xml
+            **/package.json
+            **/vite.config.js
+
+      - name: Le dipendenze sono cambiate?
+        if: github.event_name == 'push'
+        run: |
+          if ! git rev-parse -q --verify HEAD~1 >/dev/null; then
+            echo "::warning::Primo commit: vendor sul server va caricato a mano dall'artifact rollisalpa.zip (DEPLOY.md)."
+          elif git diff --name-only HEAD~1 HEAD | grep -q '^composer.lock$'; then
+            echo "::warning::composer.lock e' cambiato: vendor sul server e' da aggiornare a mano (artifact rollisalpa.zip -> File Manager)."
+          else
+            echo "composer.lock invariato: vendor sul server va bene com'e'."
+          fi

@@ -1,0 +1,51 @@
+# SP BEGIN php handler
+#
+# ⚠️ NON RIMUOVERE QUESTO BLOCCO. Vedi DEPLOY.md § 2.
+#
+# Perche' c'e': l'.htaccess del provider in /home/omniapp/public_html
+# contiene lo stesso blocco puntato a sp-ea-php81, e vale per tutti i .php
+# sottostanti — compresa questa applicazione, che sta due livelli piu' in
+# basso. Impostare 8.3 nel MultiPHP Manager del sottodominio non basta a
+# vincere su quello. Qui lo si sovrascrive puntandolo a sp-ea-php83.
+#
+# Senza queste righe il pannello risponde 500 con
+# "Your Composer dependencies require a PHP version >= 8.3.0".
+# Successo il 23/09/2026, quando un deploy ha sostituito questo file con
+# l'.htaccess standard di Laravel, che il blocco non ce l'ha.
+#
+# Se un giorno si alza la versione di PHP, va cambiata in tre posti che
+# devono coincidere: qui, nel MultiPHP Manager e nella GitHub Action.
+<IfModule mod_fcgid.c>
+    AddHandler fcgid-script .php .php5 .php7 .phtml
+    FcgidWrapper    /usr/local/cpanel/cgi-sys/sp-ea-php83 .php
+    FcgidWrapper    /usr/local/cpanel/cgi-sys/sp-ea-php83 .php5
+    FcgidWrapper    /usr/local/cpanel/cgi-sys/sp-ea-php83 .php7
+    FcgidWrapper    /usr/local/cpanel/cgi-sys/sp-ea-php83 .phtml
+</IfModule>
+# SP END php handler
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
