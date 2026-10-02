@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AppuntiController;
+use App\Http\Controllers\Api\RegistroController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Middleware\TokenSincronizzazione;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +12,7 @@ Route::middleware([TokenSincronizzazione::class, 'throttle:120,1'])->group(funct
     Route::post('/sync', [SyncController::class, 'sync']);
     Route::get('/spunte', [SyncController::class, 'spunte']);
     Route::post('/stato', [SyncController::class, 'stato']);
+    Route::post('/controlli', [RegistroController::class, 'registra']);
     Route::get('/appunti', [AppuntiController::class, 'index']);
     Route::post('/appunti/elaborati', [AppuntiController::class, 'elaborati']);
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file']);

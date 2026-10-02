@@ -20,6 +20,7 @@
                 @foreach ($progetti as $p)
                     <a href="{{ route('pannello', $p->slug) }}" @if (isset($progetto) && $progetto->slug === $p->slug) aria-current="page" @endif>{{ $p->nome }}</a>
                 @endforeach
+                <a href="{{ route('registro') }}" @if (request()->routeIs('registro')) aria-current="page" @endif>Registro</a>
             </div>
             @isset($progetto)
                 <div class="tabs sotto">

@@ -164,3 +164,26 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .ev.rolling .chip { background: var(--risk-bg); color: var(--risk); border-color: var(--risk) }
 .link-azione { background: none; border: 0; padding: 0; color: var(--accent); font-size: .8rem; text-decoration: underline; cursor: pointer }
 .note.fatta { text-decoration: line-through; color: var(--muted) }
+
+/* Registro: verdetto, mail da leggere, griglia dei controlli orari */
+.registro .verdetto { border: 1px solid var(--line); border-left: 5px solid var(--ok); border-radius: 8px; padding: 12px 16px; background: var(--ok-bg); display: grid; gap: 6px }
+.registro .verdetto.ko { border-left-color: var(--risk); background: var(--risk-bg) }
+.registro .verdetto h1 { font: 700 1.3rem var(--f-display); margin: 0 }
+.registro .verdetto ul { margin: 0; padding-left: 18px }
+.registro .blocco { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; min-width: 0 }
+.registro .blocco h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 }
+.registro .ev summary { cursor: pointer; list-style-position: outside }
+.registro .ev .oggetto { color: var(--ink); font-weight: 600 }
+.testo-mail { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; font-size: .88rem; border-left: 2px solid var(--line); padding-left: 10px }
+.griglia-scroll { overflow-x: auto }
+.griglia { border-collapse: collapse; font-size: .8rem }
+.griglia th, .griglia td { border: 1px solid var(--line); padding: 3px 6px; text-align: center; white-space: nowrap }
+.griglia tbody th { text-align: left; font-weight: 600 }
+.griglia .g-ok { background: var(--ok-bg); color: var(--ok) }
+.griglia .g-avvisi, .griglia .g-atteso { background: var(--wait-bg); color: var(--wait) }
+.griglia .g-errore, .griglia .g-manca { background: var(--risk-bg); color: var(--risk); font-weight: 700 }
+.griglia .g-prima { color: var(--off) }
+.chip.esito-ok { background: var(--ok-bg); color: var(--ok) }
+.chip.esito-avvisi { background: var(--wait-bg); color: var(--wait) }
+.chip.esito-errore { background: var(--risk-bg); color: var(--risk); border-color: var(--risk) }
+.passi { font-size: .82rem }
