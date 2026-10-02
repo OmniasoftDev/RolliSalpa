@@ -55,5 +55,13 @@ Nuove tabelle o colonne: migration **piu'** SQL equivalente in `database/sql/`, 
 |---|---|---|---|
 | 02/10/2026 | `database/schema-iniziale.sql` | tutte le tabelle iniziali | importato 02/10/2026 |
 | 02/10/2026 | `database/sql/2026-10-02-appunti.sql` | tabelle `appunti` e `appunti_allegati` (appunti dal sito con foto/PDF) | importato 02/10/2026, prima del push |
+| 02/10/2026 | `database/sql/2026-10-02-chat.sql` | tabella `chat_messaggi` (chat con Claude) | **da importare** |
 
 Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).
+
+## Chat con Claude
+
+- Serve `ANTHROPIC_API_KEY` nel `.env` del server (chiave da console.anthropic.com). Senza, la pagina Chat dice "non ancora attiva".
+- Modello `claude-opus-5-5`, effort `medium`, fallback lato server attivi (`fallbacks: 'default'`, beta `server-side-fallback-2026-07-01`): se un filtro rifiuta, l'API riprova con un modello adatto.
+- Il 02/10/2026 e' stato aggiunto `anthropic-ai/sdk` a `composer.lock`: **`vendor/` sul server va ricaricato** dall'artifact `rollisalpa.zip` della build (solo la cartella `vendor`).
+- I dati del progetto (macchine, note con fonte, domande, eventi, appunti) vengono inviati all'API di Anthropic a ogni messaggio.

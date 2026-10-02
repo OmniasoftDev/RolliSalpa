@@ -139,3 +139,14 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .aggiornamenti b { font: 600 .74rem var(--f-display); text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-right: 4px }
 .aggiornamenti em { font-style: normal; color: var(--wait); font-weight: 600 }
 .aggiornamenti.fermo { border-color: var(--risk); background: var(--risk-bg); color: var(--risk) }
+
+/* Menu Quadro / Chat e pagina chat */
+.tabs.sotto a { font-size: .82rem; padding: 3px 10px }
+.chat-pagina { max-width: 860px }
+.chat { display: grid; gap: 10px }
+.msg { display: grid; gap: 6px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line); max-width: 92%; min-width: 0 }
+.msg .meta { font-size: .76rem; color: var(--muted) }
+.msg-io { background: color-mix(in srgb, var(--accent) 10%, var(--panel)); justify-self: end }
+.msg-claude { background: var(--panel); justify-self: start }
+.msg .btn { justify-self: start; font-size: .78rem; padding: 4px 10px; width: auto }
+.chat-invio { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px; display: grid; gap: 8px; border-top: 1px solid var(--line) }

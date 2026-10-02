@@ -7,6 +7,7 @@ Pannello web dei progetti Industria 4.0 **Salpa** e **Rolli** seguiti da Omniaso
 - **Salpa e Rolli sono due progetti separati**: stesso software, dati separati per `projects.slug` (`salpa`, `rolli`). Niente viste o contatori che mescolano i due.
 - **La fonte dei dati e' sul PC**: `C:\apps\rolli-salpa\pannello\<slug>.json`, inviati da `automazione\pubblica-pannello.ps1` a `POST /api/sync` (fotografia completa: cio' che manca dal file viene tolto). Non si modificano macchine, note o eventi dal web.
 - **Dati che nascono sul web**: le spunte delle domande (`questions.fatto_web`, vincono sul file finche' il PC non le riprende da `GET /api/spunte`) e gli **appunti** (`appunti`, `appunti_allegati`): sopralluoghi, riunioni, decisioni e note di Francesco con foto/PDF. Il PC li scarica da `GET /api/appunti` + `GET /api/allegati/{id}`, Claude li elabora come le mail e poi `POST /api/appunti/elaborati`. Un appunto elaborato non si cancella piu' dal sito.
+- **Chat con Claude** (`/{slug}/chat`, `App\Services\ChatClaude`): una conversazione per progetto (`chat_messaggi`); Claude riceve nel prompt di sistema la fotografia del progetto dal DB, non mail e file del PC. "Registra come decisione" apre il modulo appunti precompilato (tipo decisione): la decisione segue poi la strada degli appunti verso il PC. SDK `anthropic-ai/sdk`, chiave `ANTHROPIC_API_KEY`.
 - Lo SCADA Omniasoft per Rolli (da AbruzzoResineNew) **non** va in questa app.
 
 ## Struttura

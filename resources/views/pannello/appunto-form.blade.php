@@ -1,5 +1,5 @@
 {{-- Nuovo appunto: sopralluogo, riunione, decisione o nota, con foto e PDF. Pensato per il telefono. --}}
-<form class="appunto-form" id="appunto-form" data-url="{{ route('appunti.store', $progetto->slug) }}" hidden>
+<form class="appunto-form" id="appunto-form" data-url="{{ route('appunti.store', $progetto->slug) }}" data-progetto="{{ $progetto->slug }}" hidden>
     <div class="top"><h3>Nuovo appunto · {{ $progetto->nome }}</h3><button type="button" class="esci" data-chiudi-appunto>Chiudi</button></div>
 
     <fieldset class="tipi">

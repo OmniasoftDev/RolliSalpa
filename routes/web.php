@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppuntiController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PannelloController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [PannelloController::class, 'index'])->name('home');
     Route::post('/domande/{question}', [PannelloController::class, 'segna'])->name('domande.segna');
     Route::post('/{slug}/appunti', [AppuntiController::class, 'store'])->where('slug', '[a-z0-9-]+')->name('appunti.store');
+    Route::get('/{slug}/chat', [ChatController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('chat');
+    Route::post('/{slug}/chat', [ChatController::class, 'invia'])->where('slug', '[a-z0-9-]+')->middleware('throttle:20,1')->name('chat.invia');
     Route::delete('/appunti/{appunto}', [AppuntiController::class, 'destroy'])->name('appunti.destroy');
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file'])->name('allegati.file');
     // Ultima: /salpa, /rolli ...

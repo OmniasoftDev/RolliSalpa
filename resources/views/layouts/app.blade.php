@@ -21,6 +21,12 @@
                     <a href="{{ route('pannello', $p->slug) }}" @if (isset($progetto) && $progetto->slug === $p->slug) aria-current="page" @endif>{{ $p->nome }}</a>
                 @endforeach
             </div>
+            @isset($progetto)
+                <div class="tabs sotto">
+                    <a href="{{ route('pannello', $progetto->slug) }}" @if (request()->routeIs('pannello')) aria-current="page" @endif>Quadro</a>
+                    <a href="{{ route('chat', $progetto->slug) }}" @if (request()->routeIs('chat')) aria-current="page" @endif>Chat con Claude</a>
+                </div>
+            @endisset
         @endisset
         <form method="post" action="{{ route('logout') }}">
             @csrf
