@@ -18,9 +18,10 @@ class RegistroTest extends TestCase
 
     private function mail(string $codice, string $ricevuta, array $extra = []): array
     {
-        return ['codice' => $codice, 'ricevuta' => $ricevuta, 'cartella' => 'Posta in arrivo', 'da' => 'Roberto Merlotti <roberto.merlotti@salparoseto.it>',
+        // $extra per primo: con + vince la chiave dell'array di sinistra
+        return $extra + ['codice' => $codice, 'ricevuta' => $ricevuta, 'cartella' => 'Posta in arrivo', 'da' => 'Roberto Merlotti <roberto.merlotti@salparoseto.it>',
             'a' => 'info', 'oggetto' => 'ROLLI | Analisi investimenti 4.0', 'testo' => 'Con Francesco verifichiamo', 'allegati' => [], 'inviata' => false,
-            'elaborata' => null, 'trovata' => '2026-10-02 17:00:01'] + $extra;
+            'elaborata' => null, 'trovata' => '2026-10-02 17:00:01'];
     }
 
     private function pacchetto(array $mail, array $codici, string $controllo = '2026-10-02 17:00:01'): array
