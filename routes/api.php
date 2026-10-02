@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([TokenSincronizzazione::class, 'throttle:120,1'])->group(function () {
     Route::post('/sync', [SyncController::class, 'sync']);
     Route::get('/spunte', [SyncController::class, 'spunte']);
+    Route::post('/stato', [SyncController::class, 'stato']);
     Route::get('/appunti', [AppuntiController::class, 'index']);
     Route::post('/appunti/elaborati', [AppuntiController::class, 'elaborati']);
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file']);

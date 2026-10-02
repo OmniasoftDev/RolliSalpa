@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Services\Sincronizzazione;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 
 class SyncController extends Controller
@@ -23,6 +24,25 @@ class SyncController extends Controller
         } catch (InvalidArgumentException $e) {
             return response()->json(['errore' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * POST /api/stato — a ogni controllo orario il PC dice cosa ha fatto:
+     * {"controllo": "2026-10-02 14:00", "mail": "2026-10-02 11:20", "rolling": "2026-10-02 14:00", "rollingVersione": "v19"}.
+     * Si tiene in cache (nessuna tabella): serve solo alla striscia in cima alle pagine.
+     */
+    public function stato(Request $request): JsonResponse
+    {
+        $campi = [];
+        foreach (['controllo', 'mail', 'rolling', 'rollingVersione'] as $k) {
+            $v = $request->input($k);
+            if (is_string($v) && strlen($v) <= 40) {
+                $campi[$k] = $v;
+            }
+        }
+        Cache::forever('stato_pc', $campi + ['ricevuto' => now()->format('Y-m-d H:i')]);
+
+        return response()->json(['ok' => true]);
     }
 
     /** GET /api/spunte — domande spuntate o tolte dal browser, da riportare nei file sul PC. */

@@ -133,3 +133,9 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .stato.attesa { background: var(--wait-bg); color: var(--wait) }
 .link-elimina { background: none; border: 0; padding: 0; color: var(--risk); font-size: .78rem; text-decoration: underline; cursor: pointer }
 @media (max-width: 600px) { .btn { width: 100% } .appunto-form fieldset.tipi label { flex: 1 1 40% } }
+
+/* Striscia "ultimi aggiornamenti" in cima alla pagina */
+.aggiornamenti { display: flex; flex-wrap: wrap; gap: 4px 22px; font-size: .84rem; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 14px }
+.aggiornamenti b { font: 600 .74rem var(--f-display); text-transform: uppercase; letter-spacing: .06em; color: var(--ink); margin-right: 4px }
+.aggiornamenti em { font-style: normal; color: var(--wait); font-weight: 600 }
+.aggiornamenti.fermo { border-color: var(--risk); background: var(--risk-bg); color: var(--risk) }

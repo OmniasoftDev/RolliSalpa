@@ -8,6 +8,7 @@ use App\Models\Question;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class PannelloController extends Controller
@@ -29,6 +30,9 @@ class PannelloController extends Controller
             'progetti' => Project::orderBy('ordine')->get(['slug', 'nome']),
             'eventi' => $progetto->events()->limit(200)->get(),
             'appunti' => Appunto::with('allegati')->where('project_id', $progetto->id)->latest()->limit(200)->get(),
+            'statoPc' => Cache::get('stato_pc', []),
+            'appuntiElaborati' => Appunto::where('project_id', $progetto->id)->max('elaborato_at'),
+            'appuntiInAttesa' => Appunto::where('project_id', $progetto->id)->whereNull('elaborato_at')->count(),
         ]);
     }
 

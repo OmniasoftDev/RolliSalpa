@@ -106,6 +106,20 @@ class PannelloTest extends TestCase
         $this->get('/')->assertRedirect('/rolli');
     }
 
+    public function test_striscia_ultimi_aggiornamenti_dal_pc(): void
+    {
+        $this->sync($this->progetto());
+        $this->postJson('/api/stato', ['controllo' => '2026-10-02 14:00'])->assertStatus(401);
+        $this->withToken(self::TOKEN)->postJson('/api/stato', [
+            'controllo' => '2026-10-02 14:00', 'mail' => '2026-10-02 11:20', 'rolling' => '2026-10-02 14:00', 'rollingVersione' => 'v19',
+        ])->assertOk();
+
+        $this->actingAs(User::factory()->create())->get('/rolli')->assertOk()
+            ->assertSee('Ultimo controllo PC')
+            ->assertSee('02/10 11:20')
+            ->assertSee('v19');
+    }
+
     public function test_login(): void
     {
         $u = User::factory()->create(['email' => 'f@omniasoft.it', 'password' => 'segreta-123']);

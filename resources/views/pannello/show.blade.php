@@ -26,6 +26,7 @@
 
 @section('contenuto')
 <div class="wrap">
+    @include('pannello.aggiornamenti')
     <header class="head">
         <div>
             <h1>{{ $progetto->info('titolo', $progetto->nome.' · Industria 4.0') }}</h1>
