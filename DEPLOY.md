@@ -14,12 +14,12 @@ Stesso schema di omnia-hosting (`C:\apps\hosting\DEPLOY.md`, da leggere per i de
 
 ## Preparazione — una volta sola (Francesco)
 
-Stato: tutto **da fare**.
+Stato al 02/10/2026: passi 1–4 (database) e 12 (AutoSSL avviato) **fatti**; il resto **da fare**.
 
-1. **DNS** — sui nameserver Aruba Business di `omniasoft.app`: record A `rollisalpa` → `46.28.4.124`.
-2. **Sottodominio** — cPanel → Domini: `rollisalpa.omniasoft.app`, document root `/home/omniapp/public_html/rollisalpa.omniasoft.app/public`.
-3. **PHP** — MultiPHP Manager: `ea-php83` sul sottodominio. Il blocco `sp-ea-php83` in `public/.htaccess` serve comunque (vedi omnia-hosting § 2): non toglierlo.
-4. **Database** — cPanel → MySQL: database `omniapp_rollisalpa`, utente `omniapp_rollisalpa` con tutti i privilegi sul database.
+1. **DNS** — FATTO (02/10/2026): record A `rollisalpa` e `www.rollisalpa` → `46.28.4.124` sui nameserver Aruba Business (zona SOA 2026100202), verificati su ns.abdns.info.
+2. **Sottodominio** — FATTO (02/10/2026): `rollisalpa.omniasoft.app`, document root `/home/omniapp/public_html/rollisalpa.omniasoft.app/public`. Il modulo "Crea un nuovo dominio" di cPanel rispondeva *"You must specify a subdomain"*: creato con l'API UAPI `SubDomain/addsubdomain` (domain=rollisalpa, rootdomain=omniasoft.app, dir=public_html/rollisalpa.omniasoft.app/public) dalla sessione cPanel.
+3. **PHP** — FATTO (02/10/2026): `ea-php83` sul sottodominio (UAPI `LangPHP/php_set_vhost_versions`). Il blocco `sp-ea-php83` in `public/.htaccess` serve comunque (vedi omnia-hosting § 2): non toglierlo.
+4. **Database** — database `omniapp_rollisalpa` FATTO (02/10/2026). Da fare (Francesco): utente `omniapp_rollisalpa` con password dal generatore, associato al database con tutti i privilegi.
 5. **Utente FTP** — cPanel → FTP Accounts, directory `/home/omniapp/public_html/rollisalpa.omniasoft.app` (il workflow usa `server-dir: ./`, relativo alla home dell'utente FTP).
 6. **GitHub** — `OmniasoftDev/RolliSalpa` → Settings → Secrets and variables → Actions:
    - secrets `FTP_SERVER` = `46.28.4.124`, `FTP_USERNAME`, `FTP_PASSWORD`;
@@ -36,7 +36,7 @@ Stato: tutto **da fare**.
     VALUES ('Francesco Guerrieri', 'info@omniasoft.it', '<hash>', NOW(), NOW());
     ```
 11. **Permessi** — `storage` e `bootstrap/cache` (con sottocartelle): `775`.
-12. **HTTPS** — cPanel → SSL/TLS Status → AutoSSL sul sottodominio. Il token di sincronizzazione viaggia nell'header: mai in HTTP.
+12. **HTTPS** — AutoSSL avviato il 02/10/2026 dopo la propagazione DNS (UAPI `SSL/start_autossl_check`): verificare in SSL/TLS Status che il certificato copra `rollisalpa` e `www.rollisalpa`. Il token di sincronizzazione viaggia nell'header: mai in HTTP.
 13. **Prova** — `https://rollisalpa.omniasoft.app/login`; poi sul PC, da PowerShell: `& C:\apps\rolli-salpa\automazione\pubblica-pannello.ps1 -Forza` deve rispondere `pannello: inviati: salpa ... ; rolli ...`. Controllare anche che `https://omniasoft.app/rollisalpa.omniasoft.app/.env` risponda 403.
 
 ## Deploy quotidiano
