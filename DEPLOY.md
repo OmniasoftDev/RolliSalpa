@@ -14,7 +14,7 @@ Stesso schema di omnia-hosting (`C:\apps\hosting\DEPLOY.md`, da leggere per i de
 
 ## Preparazione — una volta sola (Francesco)
 
-Stato al 02/10/2026: passi 1–4 (database) e 12 (AutoSSL avviato) **fatti**; il resto **da fare**.
+Stato al 02/10/2026: passi 1–9 e 11 **fatti** (deploy FTP, `vendor` caricato da File Manager, `.env`, tabelle importate); 10 (utente) da fare; 12 AutoSSL avviato, certificato da verificare.
 
 1. **DNS** — FATTO (02/10/2026): record A `rollisalpa` e `www.rollisalpa` → `46.28.4.124` sui nameserver Aruba Business (zona SOA 2026100202), verificati su ns.abdns.info.
 2. **Sottodominio** — FATTO (02/10/2026): `rollisalpa.omniasoft.app`, document root `/home/omniapp/public_html/rollisalpa.omniasoft.app/public`. Il modulo "Crea un nuovo dominio" di cPanel rispondeva *"You must specify a subdomain"*: creato con l'API UAPI `SubDomain/addsubdomain` (domain=rollisalpa, rootdomain=omniasoft.app, dir=public_html/rollisalpa.omniasoft.app/public) dalla sessione cPanel.
@@ -35,7 +35,7 @@ Stato al 02/10/2026: passi 1–4 (database) e 12 (AutoSSL avviato) **fatti**; il
     INSERT INTO users (name, email, password, created_at, updated_at)
     VALUES ('Francesco Guerrieri', 'info@omniasoft.it', '<hash>', NOW(), NOW());
     ```
-11. **Permessi** — `storage` e `bootstrap/cache` (con sottocartelle): `775`.
+11. **Cartelle e permessi** — il deploy esclude il contenuto di `storage/framework`, quindi `storage/framework/views`, `sessions` e `cache/data` vanno create a mano la prima volta: senza, ogni pagina risponde 500 (successo il 02/10/2026; create da File Manager / API `Fileman::mkdir`). `storage` e `bootstrap/cache` devono essere scrivibili dall'utente `omniapp` (con PHP in FastCGI basta `755`).
 12. **HTTPS** — AutoSSL avviato il 02/10/2026 dopo la propagazione DNS (UAPI `SSL/start_autossl_check`): verificare in SSL/TLS Status che il certificato copra `rollisalpa` e `www.rollisalpa`. Il token di sincronizzazione viaggia nell'header: mai in HTTP.
 13. **Prova** — `https://rollisalpa.omniasoft.app/login`; poi sul PC, da PowerShell: `& C:\apps\rolli-salpa\automazione\pubblica-pannello.ps1 -Forza` deve rispondere `pannello: inviati: salpa ... ; rolli ...`. Controllare anche che `https://omniasoft.app/rollisalpa.omniasoft.app/.env` risponda 403.
 
