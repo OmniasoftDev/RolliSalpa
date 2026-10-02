@@ -108,3 +108,28 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .login .riga { display: flex; gap: 8px; align-items: center; font-size: .85rem }
 .login button { font: 600 .95rem var(--f-display); letter-spacing: .04em; background: var(--accent); color: var(--panel); border: 0; border-radius: 4px; padding: 9px; cursor: pointer }
 .errore { color: var(--risk); font-size: .88rem }
+
+/* Appunti dal sito */
+.azioni { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center }
+.btn { font: 600 .9rem var(--f-display); letter-spacing: .04em; background: var(--accent); color: var(--panel); border: 1px solid var(--accent); border-radius: 4px; padding: 7px 14px; cursor: pointer }
+.btn-sec { background: var(--panel); color: var(--accent) }
+.btn:disabled { opacity: .6; cursor: progress }
+.appunto-form { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 16px 18px; display: grid; gap: 14px }
+.appunto-form .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px }
+.appunto-form fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; min-width: 0 }
+.appunto-form legend { font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; padding: 0 }
+.appunto-form fieldset label { display: flex; gap: 6px; align-items: center; font-size: .92rem; min-height: 32px }
+.scelta-macchine { max-height: 220px; overflow-y: auto }
+.campo { display: grid; gap: 4px; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.campo textarea { font: 1rem/1.45 var(--f-body); text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 10px; resize: vertical; width: 100% }
+.campo input[type=file] { font-size: .92rem; text-transform: none; letter-spacing: 0; color: var(--ink) }
+.file-scelti { margin: 0; padding-left: 18px; font-size: .85rem; color: var(--muted) }
+.testo-appunto { white-space: pre-wrap; overflow-wrap: anywhere }
+.miniature { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px }
+.miniature img { width: 84px; height: 84px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line) }
+.miniature .file { font-size: .82rem }
+.stato { font: 600 .68rem var(--f-display); text-transform: uppercase; letter-spacing: .06em; padding: 1px 6px; border-radius: 3px }
+.stato.ok { background: var(--ok-bg); color: var(--ok) }
+.stato.attesa { background: var(--wait-bg); color: var(--wait) }
+.link-elimina { background: none; border: 0; padding: 0; color: var(--risk); font-size: .78rem; text-decoration: underline; cursor: pointer }
+@media (max-width: 600px) { .btn { width: 100% } .appunto-form fieldset.tipi label { flex: 1 1 40% } }

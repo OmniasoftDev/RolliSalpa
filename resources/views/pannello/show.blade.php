@@ -53,6 +53,9 @@
         </div>
     </header>
 
+    <div class="azioni"><button type="button" class="btn" data-apri-appunto="">+ Nuovo appunto</button></div>
+    @include('pannello.appunto-form')
+
     @if ($progetto->info('richiesta') || $progetto->info('posizione'))
         <div class="brief">
             @if ($progetto->info('richiesta'))<b>Richiesta del cliente</b><span>{{ $progetto->info('richiesta') }}</span>@endif
@@ -96,12 +99,14 @@
                     $kv = collect(['Fornitore' => 'fornitore', 'Referenti' => 'referenti', 'Anno investimento' => 'anno', 'Rete' => 'rete', 'IP' => 'ip', 'Protocollo' => 'protocollo', 'Requisiti' => 'requisiti', 'Stima' => 'stima'])
                         ->map(fn ($k) => $m->dato($k))->filter();
                     $storia = $eventi->filter(fn ($e) => in_array($m->codice, $e->macchine ?? [], true));
+                    $suoiAppunti = $appunti->filter(fn ($a) => in_array($m->codice, $a->macchine ?? [], true));
                 @endphp
                 <div class="detail" id="d-{{ $m->codice }}" hidden>
                     <div class="top">
                         <h3><span class="num">{{ $m->dato('num', $m->codice) }}</span>{{ $m->dato('nome') }}</h3>
                         @if ($m->dato('aggiornato'))<span class="src">Scheda aggiornata il {{ \Illuminate\Support\Carbon::parse($m->dato('aggiornato'))->format('d/m/Y') }}</span>@endif
                     </div>
+                    <div class="azioni"><button type="button" class="btn btn-sec" data-apri-appunto="{{ $m->codice }}">+ Appunto su questa macchina</button></div>
                     @if ($m->dato('prossimo'))<div class="next"><b>Prossimo passo</b>{{ $m->dato('prossimo') }}</div>@endif
                     <div class="phases">@foreach ($fasi as $f)<div class="phase">{!! $lamp($m->fase($f[0])) !!}{{ $f[1] }}</div>@endforeach</div>
                     @if ($kv->isNotEmpty())
@@ -119,6 +124,9 @@
                             <ul class="plain">@foreach ($m->dato('note') as $nota)<li class="note">{{ $nota['testo'] ?? '' }} <span class="src">— {{ $nota['fonte'] ?? '' }}</span></li>@endforeach</ul>
                         </div>
                     @endif
+                    @if ($suoiAppunti->isNotEmpty())
+                        <div class="blocco"><h2>Appunti</h2>@foreach ($suoiAppunti as $a)@include('pannello.appunto', ['a' => $a])@endforeach</div>
+                    @endif
                     @if ($storia->isNotEmpty())
                         <div class="blocco"><h2>Storia</h2>@foreach ($storia as $e)@include('pannello.evento', ['e' => $e, 'tags' => []])@endforeach</div>
                     @endif
@@ -135,6 +143,14 @@
                     </div>
                 @empty
                     <p class="empty">Nessuna domanda aperta.</p>
+                @endforelse
+            </div>
+            <div class="card">
+                <h2>Appunti dal sito</h2>
+                @forelse ($appunti->take(8) as $a)
+                    @include('pannello.appunto', ['a' => $a])
+                @empty
+                    <p class="empty">Nessun appunto. Quelli presi in sede o in riunione compaiono qui e vengono elaborati dal PC ogni ora.</p>
                 @endforelse
             </div>
             <div class="card">
@@ -180,6 +196,82 @@
     filtra(leggi('-filtro') || 'all');
 
     const token = document.querySelector('meta[name=csrf-token]').content;
+
+    // --- Appunti: modulo, bozza, foto rimpicciolite, invio ---
+    const form = document.getElementById('appunto-form');
+    const testo = document.getElementById('appunto-testo');
+    const fileInput = document.getElementById('appunto-file');
+    const errore = document.getElementById('appunto-errore');
+    const stato = document.getElementById('appunto-stato');
+    const invia = document.getElementById('appunto-invia');
+    const bozza = leggi('-bozza');
+    if (bozza) testo.value = bozza;
+    testo.addEventListener('input', () => scrivi('-bozza', testo.value));
+
+    document.querySelectorAll('[data-apri-appunto]').forEach(b => b.addEventListener('click', () => {
+        const codice = b.dataset.apriAppunto;
+        form.querySelectorAll('input[name="macchine[]"]').forEach(c => c.checked = c.value === codice);
+        form.hidden = false;
+        form.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+        testo.focus({ preventScroll: true });
+    }));
+    form.querySelector('[data-chiudi-appunto]').addEventListener('click', () => form.hidden = true);
+    fileInput.addEventListener('change', () => {
+        document.getElementById('file-scelti').replaceChildren(...[...fileInput.files].map(f => {
+            const li = document.createElement('li'); li.textContent = f.name + ' (' + Math.round(f.size / 1024) + ' KB)'; return li;
+        }));
+    });
+
+    // Le foto del telefono pesano 3-8 MB: si portano a 2000 px JPEG prima dell'invio. Se il browser non le sa leggere, parte l'originale.
+    const rimpicciolisci = async f => {
+        if (!f.type.startsWith('image/') || f.type === 'image/gif') return f;
+        try {
+            const img = await createImageBitmap(f, { imageOrientation: 'from-image' });
+            const k = Math.min(1, 2000 / Math.max(img.width, img.height));
+            const c = document.createElement('canvas');
+            c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+            return blob ? new File([blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : f;
+        } catch (e) { return f; }
+    };
+
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        errore.textContent = '';
+        if (!testo.value.trim()) { errore.textContent = 'Scrivi il testo dell\'appunto.'; testo.focus(); return; }
+        invia.disabled = true;
+        stato.textContent = fileInput.files.length ? 'Preparo le foto…' : 'Salvo…';
+        const fd = new FormData();
+        fd.append('tipo', form.querySelector('input[name=tipo]:checked').value);
+        fd.append('testo', testo.value);
+        form.querySelectorAll('input[name="macchine[]"]:checked').forEach(c => fd.append('macchine[]', c.value));
+        for (const f of fileInput.files) fd.append('allegati[]', await rimpicciolisci(f));
+        stato.textContent = 'Invio…';
+        try {
+            const r = await fetch(form.dataset.url, { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: fd });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(j.errors ? Object.values(j.errors)[0][0] : (j.message || 'errore ' + r.status));
+            scrivi('-bozza', '');
+            stato.textContent = 'Salvato. Verrà elaborato al prossimo controllo orario.';
+            setTimeout(() => location.reload(), 700);
+        } catch (err) {
+            errore.textContent = 'Non salvato: ' + err.message + '. Il testo resta qui come bozza.';
+            stato.textContent = '';
+            invia.disabled = false;
+        }
+    });
+
+    // Elimina (solo appunti non ancora elaborati): primo clic arma, secondo conferma.
+    document.addEventListener('click', async e => {
+        const b = e.target.closest('[data-elimina]');
+        if (!b) return;
+        if (!b.dataset.armato) { b.dataset.armato = '1'; b.textContent = 'Conferma eliminazione'; return; }
+        b.disabled = true;
+        const r = await fetch(b.dataset.elimina, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' } });
+        if (r.ok) location.reload(); else { const j = await r.json().catch(() => ({})); b.textContent = j.errore || 'Non eliminato'; }
+    });
+
     document.addEventListener('change', async e => {
         const box = e.target.closest('input[data-q]');
         if (!box) return;

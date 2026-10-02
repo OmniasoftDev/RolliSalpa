@@ -48,3 +48,12 @@ Push su `main`. La Action:
 4. avvisa se `composer.lock` e' cambiato: allora `vendor/` va ricaricato a mano dall'artifact.
 
 Nuove tabelle o colonne: migration **piu'** SQL equivalente in `database/sql/`, da importare in phpMyAdmin **prima** del push.
+
+## SQL importati a mano
+
+| Data | File | Cosa fa | Stato |
+|---|---|---|---|
+| 02/10/2026 | `database/schema-iniziale.sql` | tutte le tabelle iniziali | importato 02/10/2026 |
+| 02/10/2026 | `database/sql/2026-10-02-appunti.sql` | tabelle `appunti` e `appunti_allegati` (appunti dal sito con foto/PDF) | importato 02/10/2026, prima del push |
+
+Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).

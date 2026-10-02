@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appunto;
 use App\Models\Project;
 use App\Models\Question;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,7 @@ class PannelloController extends Controller
             'progetto' => $progetto,
             'progetti' => Project::orderBy('ordine')->get(['slug', 'nome']),
             'eventi' => $progetto->events()->limit(200)->get(),
+            'appunti' => Appunto::with('allegati')->where('project_id', $progetto->id)->latest()->limit(200)->get(),
         ]);
     }
 

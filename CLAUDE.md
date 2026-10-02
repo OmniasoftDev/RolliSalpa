@@ -6,7 +6,7 @@ Pannello web dei progetti Industria 4.0 **Salpa** e **Rolli** seguiti da Omniaso
 - **Niente ambiente locale**: non si installa né si avvia nulla sul PC (niente composer install, artisan, server o database locali). Si scrive il codice, push su `main`, la GitHub Action fa i test, compila `vendor` e carica via FTPS su cPanel; si prova sul server.
 - **Salpa e Rolli sono due progetti separati**: stesso software, dati separati per `projects.slug` (`salpa`, `rolli`). Niente viste o contatori che mescolano i due.
 - **La fonte dei dati e' sul PC**: `C:\apps\rolli-salpa\pannello\<slug>.json`, inviati da `automazione\pubblica-pannello.ps1` a `POST /api/sync` (fotografia completa: cio' che manca dal file viene tolto). Non si modificano macchine, note o eventi dal web.
-- **Unico dato che nasce sul web: le spunte delle domande** (`questions.fatto_web`). Vincono sul file finche' il PC non le riprende da `GET /api/spunte`.
+- **Dati che nascono sul web**: le spunte delle domande (`questions.fatto_web`, vincono sul file finche' il PC non le riprende da `GET /api/spunte`) e gli **appunti** (`appunti`, `appunti_allegati`): sopralluoghi, riunioni, decisioni e note di Francesco con foto/PDF. Il PC li scarica da `GET /api/appunti` + `GET /api/allegati/{id}`, Claude li elabora come le mail e poi `POST /api/appunti/elaborati`. Un appunto elaborato non si cancella piu' dal sito.
 - Lo SCADA Omniasoft per Rolli (da AbruzzoResineNew) **non** va in questa app.
 
 ## Struttura
