@@ -109,7 +109,7 @@ class PannelloTest extends TestCase
     public function test_striscia_ultimi_aggiornamenti_dal_pc(): void
     {
         $this->sync($this->progetto());
-        $this->postJson('/api/stato', ['controllo' => '2026-10-02 14:00'])->assertStatus(401);
+        $this->withoutToken()->postJson('/api/stato', ['controllo' => '2026-10-02 14:00'])->assertStatus(401);
         $this->withToken(self::TOKEN)->postJson('/api/stato', [
             'controllo' => '2026-10-02 14:00', 'mail' => '2026-10-02 11:20', 'rolling' => '2026-10-02 14:00', 'rollingVersione' => 'v19',
         ])->assertOk();
