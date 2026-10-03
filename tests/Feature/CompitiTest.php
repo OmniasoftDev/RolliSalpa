@@ -28,6 +28,8 @@ class CompitiTest extends TestCase
             ],
             'compitiProposti' => [
                 ['id' => 'c1', 'persona' => 'p12', 'testo' => $testoProposta, 'macchine' => ['m07', 'm08'], 'fonte' => 'Mail 01/10 Zinelli', 'scadenza' => '2026-10-09'],
+                // proposta senza scadenza su una macchina: la scheda macchina del quadro deve reggere
+                ['id' => 'c2', 'persona' => 'p2', 'testo' => 'Sollecitare il fornitore', 'macchine' => ['m08']],
             ],
         ];
     }
@@ -35,7 +37,7 @@ class CompitiTest extends TestCase
     public function test_rubrica_e_proposte_arrivano_dal_pc(): void
     {
         $this->withToken(self::TOKEN)->postJson('/api/sync', $this->progetto())->assertOk()
-            ->assertJsonPath('persone', 2)->assertJsonPath('compitiProposti', 1);
+            ->assertJsonPath('persone', 2)->assertJsonPath('compitiProposti', 2);
 
         $this->withoutToken()->actingAs(User::factory()->create())->get('/salpa/compiti')->assertOk()
             ->assertSee('Dimitri Zinelli')
@@ -44,7 +46,7 @@ class CompitiTest extends TestCase
             ->assertSee('Mandare la tabella variabili dei forni');
 
         // il quadro segnala la proposta nel blocco "Da guardare"
-        $this->get('/salpa')->assertOk()->assertSee('da confermare');
+        $this->get('/salpa')->assertOk()->assertSee('da confermare')->assertSee('Sollecitare il fornitore');
     }
 
     public function test_confermato_dal_web_il_file_non_lo_cambia_piu(): void

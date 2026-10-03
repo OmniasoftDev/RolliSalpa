@@ -189,6 +189,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .passi { font-size: .82rem }
 
 /* Persone e compiti */
+.appunto-form[hidden] { display: none }
 .gauge.alert-wait b { color: var(--wait) }
 .card-attesa { border-top: 3px solid var(--wait) }
 .card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
