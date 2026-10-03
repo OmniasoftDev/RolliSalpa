@@ -33,6 +33,16 @@ class Project extends Model
         return $this->hasMany(Decisione::class)->orderBy('ordine');
     }
 
+    public function persone(): HasMany
+    {
+        return $this->hasMany(Persona::class)->orderBy('ordine');
+    }
+
+    public function compiti(): HasMany
+    {
+        return $this->hasMany(Compito::class);
+    }
+
     /** Valore di progetto/info, con un default. */
     public function info(string $chiave, mixed $default = null): mixed
     {

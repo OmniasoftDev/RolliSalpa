@@ -25,6 +25,7 @@
             @isset($progetto)
                 <div class="tabs sotto">
                     <a href="{{ route('pannello', $progetto->slug) }}" @if (request()->routeIs('pannello')) aria-current="page" @endif>Quadro</a>
+                    <a href="{{ route('compiti', $progetto->slug) }}" @if (request()->routeIs('compiti')) aria-current="page" @endif>Persone e compiti</a>
                     <a href="{{ route('chat', $progetto->slug) }}" @if (request()->routeIs('chat')) aria-current="page" @endif>Chat con Claude</a>
                 </div>
             @endisset

@@ -121,6 +121,13 @@
                             @endforeach
                         </div>
                     @endif
+                    @php $suoiCompiti = $compiti->filter(fn ($c) => in_array($m->codice, $c->macchine ?? [], true)); @endphp
+                    @if ($suoiCompiti->isNotEmpty())
+                        <div class="blocco"><h2>Compiti</h2>
+                            <ul class="plain">@foreach ($suoiCompiti as $c)<li class="note">{{ $c->testo }} <span class="src">— {{ $persone[$c->persona]->nome ?? 'da assegnare' }}@if ($c->stato === 'proposto') · da confermare@elseif ($c->scadenza) · {{ $c->scaduto() ? 'scaduto il' : 'entro il' }} {{ $c->scadenza->format('d/m') }}@endif</span></li>@endforeach</ul>
+                            <a class="link-azione" href="{{ route('compiti', $progetto->slug) }}">Gestisci in Persone e compiti</a>
+                        </div>
+                    @endif
                     @if ($m->dato('note'))
                         <div class="blocco"><h2>Fatti accertati</h2>
                             <ul class="plain">@foreach ($m->dato('note') as $nota)<li class="note">{{ $nota['testo'] ?? '' }} <span class="src">— {{ $nota['fonte'] ?? '' }}</span></li>@endforeach</ul>

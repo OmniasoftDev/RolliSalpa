@@ -58,6 +58,7 @@ Nuove tabelle o colonne: migration **piu'** SQL equivalente in `database/sql/`, 
 | 02/10/2026 | `database/sql/2026-10-02-chat.sql` | tabella `chat_messaggi` (chat con Claude) | importato 02/10/2026 |
 | 02/10/2026 | `database/sql/2026-10-02-da-guardare.sql` | tabella `decisioni`, colonne `events.da_vedere` e `events.visto_at` (blocco "Da guardare") | importato 02/10/2026, prima del push |
 | 02/10/2026 | `database/sql/2026-10-02-registro.sql` | tabelle `controlli` e `mail_registro` (registro dei controlli del PC, quadratura e mail da leggere) | importato 02/10/2026 (Francesco), prima del push |
+| 03/10/2026 | `database/sql/2026-10-03-persone-compiti.sql` | tabelle `persone` e `compiti` (Persone e compiti) | **da importare prima del push** |
 
 Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).
 

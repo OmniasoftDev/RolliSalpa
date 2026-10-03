@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppuntiController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CompitiController;
 use App\Http\Controllers\PannelloController;
 use App\Http\Controllers\RegistroController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/{slug}/appunti', [AppuntiController::class, 'store'])->where('slug', '[a-z0-9-]+')->name('appunti.store');
     Route::get('/{slug}/chat', [ChatController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('chat');
     Route::post('/{slug}/chat', [ChatController::class, 'invia'])->where('slug', '[a-z0-9-]+')->middleware('throttle:20,1')->name('chat.invia');
+    Route::get('/{slug}/compiti', [CompitiController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('compiti');
+    Route::post('/{slug}/compiti', [CompitiController::class, 'store'])->where('slug', '[a-z0-9-]+')->name('compiti.store');
+    Route::post('/compiti/{compito}', [CompitiController::class, 'aggiorna'])->name('compiti.aggiorna');
     Route::delete('/appunti/{appunto}', [AppuntiController::class, 'destroy'])->name('appunti.destroy');
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file'])->name('allegati.file');
     Route::get('/registro', [RegistroController::class, 'show'])->name('registro');

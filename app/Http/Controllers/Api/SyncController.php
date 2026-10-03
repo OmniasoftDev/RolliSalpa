@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Compito;
 use App\Models\Decisione;
 use App\Models\Question;
 use App\Services\Sincronizzazione;
@@ -80,6 +81,23 @@ class SyncController extends Controller
                 'fattaIl' => $d->fatta_il?->format('Y-m-d'),
             ]);
 
-        return response()->json(['spunte' => $spunte, 'decisioni' => $decisioni]);
+        // Tutti i compiti tranne quelli ancora proposti: li gestisce Francesco dal web, il PC li riporta nei .md
+        $compiti = Compito::with('project')->where('stato', '!=', 'proposto')->orderBy('id')->get()
+            ->map(fn (Compito $c) => [
+                'progetto' => $c->project->slug,
+                'id' => $c->codice ?: 'w'.$c->id,
+                'persona' => $c->persona,
+                'testo' => $c->testo,
+                'macchine' => $c->macchine ?? [],
+                'fonte' => $c->fonte,
+                'scadenza' => $c->scadenza?->format('Y-m-d'),
+                'stato' => $c->stato,
+                'assegnatoIl' => $c->assegnato_il?->format('Y-m-d'),
+                'chiusoIl' => $c->chiuso_il?->format('Y-m-d'),
+                'esito' => $c->esito,
+                'aggiornato' => $c->updated_at?->format('Y-m-d H:i'),
+            ]);
+
+        return response()->json(['spunte' => $spunte, 'decisioni' => $decisioni, 'compiti' => $compiti]);
     }
 }

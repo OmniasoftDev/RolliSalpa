@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Compito;
 use App\Models\Decisione;
 use App\Models\Event;
 use App\Models\Machine;
+use App\Models\Persona;
 use App\Models\Project;
 use App\Models\Question;
 use Illuminate\Support\Facades\DB;
@@ -78,8 +80,10 @@ class Sincronizzazione
             $progetto->events()->whereNotIn('codice', $codiciEventi)->delete();
 
             $decisioni = $this->decisioni($progetto, is_array($dati['decisioni'] ?? null) ? $dati['decisioni'] : []);
+            $persone = $this->persone($progetto, is_array($dati['persone'] ?? null) ? $dati['persone'] : []);
+            $proposti = $this->compitiProposti($progetto, is_array($dati['compitiProposti'] ?? null) ? $dati['compitiProposti'] : []);
 
-            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi), 'decisioni' => $decisioni];
+            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi), 'decisioni' => $decisioni, 'persone' => $persone, 'compitiProposti' => $proposti];
         });
     }
 
@@ -141,6 +145,68 @@ class Sincronizzazione
             $decisione->save();
         }
         $progetto->decisioni()->whereNotIn('codice', $codici)->delete();
+
+        return count($codici);
+    }
+
+    /** Rubrica del progetto: fotografia completa, come le macchine. */
+    private function persone(Project $progetto, array $elenco): int
+    {
+        $codici = [];
+        foreach (array_values($elenco) as $i => $p) {
+            $nome = trim((string) ($p['nome'] ?? ''));
+            if ($nome === '') {
+                continue;
+            }
+            $codice = $this->codice($p['id'] ?? null, 'persona');
+            $codici[] = $codice;
+            $corto = fn ($k) => isset($p[$k]) && $p[$k] !== '' ? mb_substr((string) $p[$k], 0, 250) : null;
+            Persona::updateOrCreate(['project_id' => $progetto->id, 'codice' => $codice], [
+                'ordine' => $i,
+                'nome' => mb_substr($nome, 0, 250),
+                'azienda' => $corto('azienda'),
+                'gruppo' => isset($p['gruppo']) ? mb_substr((string) $p['gruppo'], 0, 60) : null,
+                'ruolo' => isset($p['ruolo']) ? (string) $p['ruolo'] : null,
+                'macchine' => array_values(array_filter((array) ($p['macchine'] ?? []), 'is_string')),
+                'contatti' => $corto('contatti'),
+                'fonte' => $corto('fonte'),
+            ]);
+        }
+        $progetto->persone()->whereNotIn('codice', $codici)->delete();
+
+        return count($codici);
+    }
+
+    /**
+     * Compiti proposti dal PC (da mail, appunti, visite). Si creano come "proposto"; finche'
+     * Francesco non li tocca il file li aggiorna o li toglie. Confermati o scartati, sono suoi:
+     * il file non li cambia piu'.
+     */
+    private function compitiProposti(Project $progetto, array $elenco): int
+    {
+        $codici = [];
+        foreach ($elenco as $c) {
+            $testo = trim((string) ($c['testo'] ?? ''));
+            if ($testo === '') {
+                continue;
+            }
+            $codice = $this->codice($c['id'] ?? null, 'compito');
+            $codici[] = $codice;
+            $compito = Compito::firstOrNew(['project_id' => $progetto->id, 'codice' => $codice]);
+            if ($compito->exists && $compito->stato !== 'proposto') {
+                continue;
+            }
+            $scadenza = (string) ($c['scadenza'] ?? '');
+            $compito->fill([
+                'stato' => 'proposto',
+                'persona' => isset($c['persona']) && $c['persona'] !== '' ? mb_substr((string) $c['persona'], 0, 40) : null,
+                'testo' => $testo,
+                'macchine' => array_values(array_filter((array) ($c['macchine'] ?? []), 'is_string')),
+                'fonte' => isset($c['fonte']) ? mb_substr((string) $c['fonte'], 0, 250) : null,
+                'scadenza' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $scadenza) ? $scadenza : null,
+            ])->save();
+        }
+        $progetto->compiti()->where('stato', 'proposto')->whereNotNull('codice')->whereNotIn('codice', $codici)->delete();
 
         return count($codici);
     }

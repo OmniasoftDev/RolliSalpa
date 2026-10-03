@@ -34,6 +34,8 @@ class PannelloController extends Controller
             'appunti' => Appunto::with('allegati')->where('project_id', $progetto->id)->latest()->limit(200)->get(),
             'statoPc' => Cache::get('stato_pc', []),
             'decisioni' => $progetto->decisioni()->get(),
+            'compiti' => $progetto->compiti()->whereIn('stato', ['proposto', 'aperto'])->orderByRaw('scadenza is null')->orderBy('scadenza')->get(),
+            'persone' => $progetto->persone()->get()->keyBy('codice'),
             'appuntiElaborati' => Appunto::where('project_id', $progetto->id)->max('elaborato_at'),
             'appuntiInAttesa' => Appunto::where('project_id', $progetto->id)->whereNull('elaborato_at')->count(),
         ]);

@@ -152,7 +152,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .chat-invio { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px; display: grid; gap: 8px; border-top: 1px solid var(--line) }
 
 /* Da guardare: decisioni, novita' non viste, mail escluse */
-.da-guardare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px }
+.da-guardare { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
 @media (max-width: 1000px) { .da-guardare { grid-template-columns: minmax(0, 1fr) } }
 .dg-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; max-height: 420px; overflow-y: auto }
 .dg-col.attivo { border-top: 3px solid var(--wait) }
@@ -187,3 +187,27 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .chip.esito-avvisi { background: var(--wait-bg); color: var(--wait) }
 .chip.esito-errore { background: var(--risk-bg); color: var(--risk); border-color: var(--risk) }
 .passi { font-size: .82rem }
+
+/* Persone e compiti */
+.gauge.alert-wait b { color: var(--wait) }
+.card-attesa { border-top: 3px solid var(--wait) }
+.card h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+details.card summary { cursor: pointer }
+.compito { display: grid; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line) }
+.compito:last-child { border-bottom: 0 }
+.compito .t { font-size: .95rem; overflow-wrap: anywhere }
+.compito .t.annullato { text-decoration: line-through; color: var(--muted) }
+.compito .meta, .persona .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: .8rem; color: var(--muted) }
+.compito.scaduto { border-left: 3px solid var(--risk); padding-left: 10px }
+.compito .err { color: var(--risk); font-size: .8rem }
+.compito details.chiudi { display: grid; gap: 8px }
+.compito details.chiudi[open] { background: var(--off-bg); border-radius: 6px; padding: 8px 10px }
+.chip.chip-rischio { background: var(--risk-bg); color: var(--risk); border-color: var(--risk) }
+.riga-campi { display: flex; flex-wrap: wrap; gap: 10px 16px }
+.riga-campi .campo { flex: 1 1 200px }
+.sel { font: 1rem var(--f-body); text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; width: 100%; min-height: 38px }
+.campo textarea { min-height: 0 }
+.persona { display: grid; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--line) }
+.persona:last-child { border-bottom: 0 }
+.gruppo-persone { font: 600 .74rem var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-top: 6px }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr) } }

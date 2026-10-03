@@ -4,8 +4,26 @@
     $novita = $eventi->filter(fn ($e) => $e->nonVisto())->sortByDesc('chiave')->values();
     $escluse = collect($statoPc['escluse'] ?? []);
     $nomiMacchine = fn ($codici) => collect($codici ?? [])->map(fn ($c) => '#'.($numDi[$c] ?? $c))->reject(fn ($t) => $t === '#—')->join(' ');
+    $scaduti = $compiti->filter(fn ($c) => $c->scaduto());
+    $proposti = $compiti->where('stato', 'proposto');
 @endphp
 <section class="da-guardare" aria-label="Da guardare">
+    <div class="dg-col {{ $scaduti->isNotEmpty() || $proposti->isNotEmpty() ? 'attivo' : '' }}">
+        <h2>Compiti <span class="conta">{{ $scaduti->count() + $proposti->count() }}</span>
+            <a class="link-azione" href="{{ route('compiti', $progetto->slug) }}">Apri</a>
+        </h2>
+        @if ($proposti->isNotEmpty())<p class="note"><b>{{ $proposti->count() }}</b> da confermare: proposte di Claude da mail e appunti.</p>@endif
+        @forelse ($scaduti as $c)
+            <div class="ev nuovo rolling">
+                <div class="meta"><span class="chip">scaduto il {{ $c->scadenza->format('d/m') }}</span><span>{{ $persone[$c->persona]->nome ?? 'Da assegnare' }}</span>
+                    @if ($nomiMacchine($c->macchine))<span class="tag">{{ $nomiMacchine($c->macchine) }}</span>@endif</div>
+                <div class="note">{{ $c->testo }}</div>
+            </div>
+        @empty
+            @if ($proposti->isEmpty())<p class="empty">Nessun compito scaduto o da confermare. Assegnati in corso: {{ $compiti->where('stato', 'aperto')->count() }}.</p>@endif
+        @endforelse
+    </div>
+
     <div class="dg-col {{ $daDecidere->isNotEmpty() ? 'attivo' : '' }}">
         <h2>Decisioni da prendere <span class="conta">{{ $daDecidere->count() }}</span></h2>
         @forelse ($daDecidere as $d)
