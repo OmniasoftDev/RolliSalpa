@@ -30,6 +30,15 @@ class DaGuardareTest extends TestCase
         ];
     }
 
+    public function test_elemento_vuoto_non_conta_come_mail_esclusa(): void
+    {
+        $this->withToken(self::TOKEN)->postJson('/api/sync', $this->progetto())->assertOk();
+        $this->withToken(self::TOKEN)->postJson('/api/stato', ['controllo' => '2026-10-03 14:00', 'escluse' => [[]]])->assertOk();
+
+        $this->withoutToken()->actingAs(User::factory()->create())->get('/rolli')->assertOk()
+            ->assertSee('Nessuna mail sul progetto arrivata da mittenti fuori elenco');
+    }
+
     public function test_decisioni_novita_e_mail_escluse_in_cima_alla_pagina(): void
     {
         $this->withToken(self::TOKEN)->postJson('/api/sync', $this->progetto())->assertOk()->assertJsonPath('decisioni', 1);

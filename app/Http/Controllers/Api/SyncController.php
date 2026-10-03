@@ -45,7 +45,8 @@ class SyncController extends Controller
         // mail che parlano del progetto ma escluse dal filtro mittenti: {quando, da, oggetto, progetto?}
         $escluse = [];
         foreach (array_slice((array) $request->input('escluse', []), 0, 50) as $m) {
-            if (is_array($m)) {
+            // un elemento vuoto (PowerShell 5.1 con "[]") non e' una mail: altrimenti il contatore segna 1 con l'elenco vuoto
+            if (is_array($m) && (($m['oggetto'] ?? '') !== '' || ($m['da'] ?? '') !== '')) {
                 $escluse[] = collect($m)->only(['quando', 'da', 'oggetto', 'progetto'])
                     ->map(fn ($v) => mb_substr((string) $v, 0, 200))->all();
             }
