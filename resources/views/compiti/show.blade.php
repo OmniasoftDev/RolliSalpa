@@ -12,10 +12,23 @@
     $aperti = $compiti->where('stato', 'aperto');
     $scaduti = $aperti->filter(fn ($c) => $c->scaduto());
     $chiusi = $compiti->whereIn('stato', ['fatto', 'annullato'])->sortByDesc('chiuso_il');
-    // assegnati raggruppati per persona, nell'ordine della rubrica; chi ha compiti scaduti va in cima
-    $perPersona = $aperti->groupBy(fn ($c) => $c->persona ?: '')
-        ->sortBy(fn ($g, $k) => [$g->contains(fn ($c) => $c->scaduto()) ? 0 : 1, $perCodice[$k]->ordine ?? 999]);
     $gruppi = $persone->groupBy(fn ($p) => $p->gruppo ?: 'Altri');
+    // un box per persona: dentro il gruppo prima chi ha scaduti, poi assegnati, poi da confermare, poi chi non ha nulla
+    $peso = fn ($codice) => $scaduti->where('persona', $codice)->isNotEmpty() ? 0
+        : ($aperti->where('persona', $codice)->isNotEmpty() ? 1 : ($proposti->where('persona', $codice)->isNotEmpty() ? 2 : 3));
+    $boxGruppi = $gruppi->map(fn ($ps) => $ps->sortBy(fn ($p) => [$peso($p->codice), $p->ordine])->values());
+    $senzaPersona = $aperti->filter(fn ($c) => ! $c->persona);
+    $opzioniPersone = function (?string $scelta) use ($gruppi) {
+        $html = '<option value="">Da assegnare</option>';
+        foreach ($gruppi as $g => $ps) {
+            $html .= '<optgroup label="'.e($g).'">';
+            foreach ($ps as $p) {
+                $html .= '<option value="'.e($p->codice).'"'.($p->codice === $scelta ? ' selected' : '').'>'.e($p->nome).'</option>';
+            }
+            $html .= '</optgroup>';
+        }
+        return $html;
+    };
 @endphp
 
 @section('contenuto')
@@ -23,7 +36,7 @@
     <header class="head">
         <div>
             <h1>Persone e compiti · {{ $progetto->nome }}</h1>
-            <p>Chi fa cosa sulle macchine e cosa hai chiesto a ciascuno. I compiti proposti da Claude (da mail, appunti, visite) restano "da confermare" finché non li confermi o li scarti.</p>
+            <p>Un box per ogni persona: cosa le hai chiesto, cosa è scaduto, cosa ha già chiuso. I compiti proposti da Claude (da mail, appunti, visite) restano "da confermare" finché non li confermi o li scarti.</p>
         </div>
         <div class="gauges">
             <div class="gauge {{ $proposti->isNotEmpty() ? 'alert-wait' : '' }}"><b>{{ $proposti->count() }}</b><span>da confermare</span></div>
@@ -38,12 +51,7 @@
     <form class="appunto-form" id="compito-form" data-url="{{ route('compiti.store', $progetto->slug) }}" hidden>
         <div class="top"><h3>Nuovo compito · {{ $progetto->nome }}</h3><button type="button" class="esci" data-chiudi-compito>Chiudi</button></div>
         <label for="compito-persona" class="campo">A chi
-            <select id="compito-persona" name="persona" class="sel">
-                <option value="">Da assegnare</option>
-                @foreach ($gruppi as $g => $ps)
-                    <optgroup label="{{ $g }}">@foreach ($ps as $p)<option value="{{ $p->codice }}">{{ $p->nome }}{{ $p->azienda ? ' · '.$p->azienda : '' }}</option>@endforeach</optgroup>
-                @endforeach
-            </select>
+            <select id="compito-persona" name="persona" class="sel">{!! $opzioniPersone(null) !!}</select>
         </label>
         <label for="compito-testo" class="campo">Cosa deve fare
             <textarea id="compito-testo" name="testo" rows="4" placeholder="Es.: mandare la tabella variabili dei forni 07 e 08 con indirizzi e tipi."></textarea>
@@ -62,133 +70,134 @@
         <div class="azioni"><button type="submit" class="btn" id="compito-invia">Assegna</button></div>
     </form>
 
-    <div class="main">
-        <section>
-            <div class="card {{ $proposti->isNotEmpty() ? 'card-attesa' : '' }}">
-                <h2>Da confermare <span class="conta">{{ $proposti->count() }}</span></h2>
-                @forelse ($proposti as $c)
-                    <div class="compito" data-compito="{{ route('compiti.aggiorna', $c) }}">
-                        <div class="t">{{ $c->testo }}</div>
-                        <div class="meta">
-                            @if ($tagMacchine($c->macchine))<span class="tag">{{ $tagMacchine($c->macchine) }}</span>@endif
-                            @if ($c->fonte)<span class="src">{{ $c->fonte }}</span>@endif
-                        </div>
-                        <div class="riga-campi">
-                            <label class="campo" for="cp-{{ $c->id }}">A chi
-                                <select id="cp-{{ $c->id }}" class="sel" data-campo="persona">
-                                    <option value="">Da assegnare</option>
-                                    @foreach ($gruppi as $g => $ps)
-                                        <optgroup label="{{ $g }}">@foreach ($ps as $p)<option value="{{ $p->codice }}" @selected($p->codice === $c->persona)>{{ $p->nome }}</option>@endforeach</optgroup>
-                                    @endforeach
-                                </select>
-                            </label>
-                            <label class="campo" for="cs-{{ $c->id }}">Entro il <input type="date" id="cs-{{ $c->id }}" class="sel" data-campo="scadenza" value="{{ $c->scadenza?->format('Y-m-d') }}"></label>
-                        </div>
-                        <div class="azioni">
-                            <button type="button" class="btn" data-azione="aperto">Conferma e assegna</button>
-                            <button type="button" class="btn btn-sec" data-azione="annullato">Scarta</button>
-                            <span class="err" aria-live="polite"></span>
-                        </div>
-                    </div>
-                @empty
-                    <p class="empty">Nessuna proposta. Quando arriva una mail o un appunto con qualcosa da far fare a qualcuno, Claude la mette qui.</p>
-                @endforelse
+    <div class="card {{ $proposti->isNotEmpty() ? 'card-attesa' : '' }}">
+        <h2>Da confermare <span class="conta">{{ $proposti->count() }}</span></h2>
+        @forelse ($proposti as $c)
+            <div class="compito" data-compito="{{ route('compiti.aggiorna', $c) }}">
+                <div class="t">{{ $c->testo }}</div>
+                <div class="meta">
+                    @if ($tagMacchine($c->macchine))<span class="tag">{{ $tagMacchine($c->macchine) }}</span>@endif
+                    @if ($c->fonte)<span class="src">{{ $c->fonte }}</span>@endif
+                </div>
+                <div class="riga-campi">
+                    <label class="campo" for="cp-{{ $c->id }}">A chi
+                        <select id="cp-{{ $c->id }}" class="sel" data-campo="persona">{!! $opzioniPersone($c->persona) !!}</select>
+                    </label>
+                    <label class="campo" for="cs-{{ $c->id }}">Entro il <input type="date" id="cs-{{ $c->id }}" class="sel" data-campo="scadenza" value="{{ $c->scadenza?->format('Y-m-d') }}"></label>
+                </div>
+                <div class="azioni">
+                    <button type="button" class="btn" data-azione="aperto">Conferma e assegna</button>
+                    <button type="button" class="btn btn-sec" data-azione="annullato">Scarta</button>
+                    <span class="err" aria-live="polite"></span>
+                </div>
             </div>
-
-            <div class="card">
-                <h2>Assegnati <span class="conta">{{ $aperti->count() }}</span></h2>
-                @forelse ($perPersona as $codice => $voci)
-                    @php $p = $perCodice[$codice] ?? null; @endphp
-                    <div class="blocco">
-                        <div class="who">{{ $nomeDi($codice) }}@if ($p?->azienda) <span class="src">· {{ $p->azienda }}</span>@endif · {{ $voci->count() }}</div>
-                        @foreach ($voci as $c)
-                            <div class="compito {{ $c->scaduto() ? 'scaduto' : '' }}" data-compito="{{ route('compiti.aggiorna', $c) }}">
-                                <div class="t">{{ $c->testo }}</div>
-                                <div class="meta">
-                                    @if ($c->scadenza)<span class="chip {{ $c->scaduto() ? 'chip-rischio' : '' }}">{{ $c->scaduto() ? 'scaduto il' : 'entro il' }} {{ $c->scadenza->format('d/m') }}</span>@endif
-                                    @if ($tagMacchine($c->macchine))<span class="tag">{{ $tagMacchine($c->macchine) }}</span>@endif
-                                    @if ($c->fonte)<span class="src">{{ $c->fonte }}</span>@endif
-                                    @if ($c->assegnato_il)<span class="src">assegnato il {{ $c->assegnato_il->format('d/m') }}</span>@endif
-                                </div>
-                                <details class="chiudi">
-                                    <summary class="link-azione">Chiudi o modifica</summary>
-                                    <div class="riga-campi">
-                                        <label class="campo" for="ca-{{ $c->id }}">A chi
-                                            <select id="ca-{{ $c->id }}" class="sel" data-campo="persona">
-                                                <option value="">Da assegnare</option>
-                                                @foreach ($gruppi as $g => $ps)
-                                                    <optgroup label="{{ $g }}">@foreach ($ps as $pp)<option value="{{ $pp->codice }}" @selected($pp->codice === $c->persona)>{{ $pp->nome }}</option>@endforeach</optgroup>
-                                                @endforeach
-                                            </select>
-                                        </label>
-                                        <label class="campo" for="cd-{{ $c->id }}">Entro il <input type="date" id="cd-{{ $c->id }}" class="sel" data-campo="scadenza" value="{{ $c->scadenza?->format('Y-m-d') }}"></label>
-                                    </div>
-                                    <label class="campo" for="ce-{{ $c->id }}">Esito (facoltativo)
-                                        <textarea id="ce-{{ $c->id }}" rows="2" data-campo="esito" placeholder="Es.: tabella arrivata con mail del 07/10.">{{ $c->esito }}</textarea>
-                                    </label>
-                                    <div class="azioni">
-                                        <button type="button" class="btn" data-azione="fatto">Fatto</button>
-                                        <button type="button" class="btn btn-sec" data-azione="aperto">Salva modifiche</button>
-                                        <button type="button" class="link-elimina" data-azione="annullato">Annulla compito</button>
-                                        <span class="err" aria-live="polite"></span>
-                                    </div>
-                                </details>
-                            </div>
-                        @endforeach
-                    </div>
-                @empty
-                    <p class="empty">Nessun compito assegnato.</p>
-                @endforelse
-            </div>
-
-            @if ($chiusi->isNotEmpty())
-                <details class="card">
-                    <summary><h2 style="display:inline">Chiusi <span class="conta">{{ $chiusi->count() }}</span></h2></summary>
-                    @foreach ($chiusi as $c)
-                        <div class="compito chiuso" data-compito="{{ route('compiti.aggiorna', $c) }}">
-                            <div class="t {{ $c->stato === 'annullato' ? 'annullato' : '' }}">{{ $c->testo }}</div>
-                            <div class="meta">
-                                <span class="chip">{{ \App\Models\Compito::STATI[$c->stato] }} {{ $c->chiuso_il?->format('d/m') }}</span>
-                                <span>{{ $nomeDi($c->persona) }}</span>
-                                @if ($tagMacchine($c->macchine))<span class="tag">{{ $tagMacchine($c->macchine) }}</span>@endif
-                            </div>
-                            @if ($c->esito)<div class="note">{{ $c->esito }}</div>@endif
-                            <div><button type="button" class="link-azione" data-azione="aperto">Riapri</button> <span class="err" aria-live="polite"></span></div>
-                        </div>
-                    @endforeach
-                </details>
-            @endif
-        </section>
-
-        <aside>
-            <div class="card">
-                <h2>Persone del progetto</h2>
-                @forelse ($gruppi as $g => $ps)
-                    <div class="blocco">
-                        <div class="gruppo-persone">{{ $g }}</div>
-                        @foreach ($ps as $p)
-                            @php $suoi = $aperti->where('persona', $p->codice); $suoiScaduti = $suoi->filter(fn ($c) => $c->scaduto()); @endphp
-                            <div class="persona">
-                                <div class="who">{{ $p->nome }}@if ($p->azienda) <span class="src">· {{ $p->azienda }}</span>@endif</div>
-                                @if ($p->ruolo)<div class="note">{{ $p->ruolo }}</div>@endif
-                                <div class="meta">
-                                    @if ($tagMacchine($p->macchine))<span class="tag">{{ $tagMacchine($p->macchine) }}</span>@endif
-                                    @if ($p->contatti)<span class="mono">{{ $p->contatti }}</span>@endif
-                                </div>
-                                <div class="meta">
-                                    @if ($suoi->isNotEmpty())<span class="chip {{ $suoiScaduti->isNotEmpty() ? 'chip-rischio' : '' }}">{{ $suoi->count() }} aperti{{ $suoiScaduti->isNotEmpty() ? ', '.$suoiScaduti->count().' scaduti' : '' }}</span>@endif
-                                    <button type="button" class="link-azione" data-apri-compito="{{ $p->codice }}">+ compito</button>
-                                    @if ($p->fonte)<span class="src">{{ $p->fonte }}</span>@endif
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @empty
-                    <p class="empty">La rubrica arriva dal PC alla prossima sincronizzazione.</p>
-                @endforelse
-            </div>
-        </aside>
+        @empty
+            <p class="empty">Nessuna proposta. Quando arriva una mail o un appunto con qualcosa da far fare a qualcuno, Claude la mette qui.</p>
+        @endforelse
     </div>
+
+    <div class="filtro-persone">
+        <h2>Per persona</h2>
+        <label for="solo-con-compiti"><input type="checkbox" id="solo-con-compiti"> Solo chi ha compiti</label>
+    </div>
+
+    @if ($senzaPersona->isNotEmpty())
+        <div class="griglia-persone">
+            <div class="box-persona stato-attesa" data-con-compiti>
+                <div class="testa"><div class="who">Da assegnare</div><div class="conti"><span class="chip">{{ $senzaPersona->count() }} aperti</span></div></div>
+                <div class="lista">
+                    @foreach ($senzaPersona as $c)
+                        @include('compiti.aperto')
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @forelse ($boxGruppi as $g => $ps)
+        <div class="gruppo-persone">{{ $g }}</div>
+        <div class="griglia-persone">
+            @foreach ($ps as $p)
+                @php
+                    $suoi = $aperti->where('persona', $p->codice);
+                    $suoiScaduti = $suoi->filter(fn ($c) => $c->scaduto());
+                    $suoiProposti = $proposti->where('persona', $p->codice);
+                    $suoiChiusi = $chiusi->where('persona', $p->codice);
+                    $suoiFatti = $suoiChiusi->where('stato', 'fatto');
+                    $stato = $suoiScaduti->isNotEmpty() ? 'stato-rischio' : ($suoi->isNotEmpty() ? 'stato-corso' : ($suoiProposti->isNotEmpty() ? 'stato-attesa' : 'stato-vuoto'));
+                @endphp
+                <div class="box-persona {{ $stato }}" @if ($suoi->isNotEmpty() || $suoiProposti->isNotEmpty()) data-con-compiti @endif>
+                    <div class="testa">
+                        <div>
+                            <div class="who">{{ $p->nome }}@if ($p->azienda) <span class="src">· {{ $p->azienda }}</span>@endif</div>
+                            @if ($p->ruolo)<div class="note">{{ $p->ruolo }}</div>@endif
+                        </div>
+                        <div class="conti">
+                            @if ($suoiScaduti->isNotEmpty())<span class="chip chip-rischio">{{ $suoiScaduti->count() }} scaduti</span>@endif
+                            @if ($suoi->isNotEmpty())<span class="chip chip-corso">{{ $suoi->count() }} aperti</span>@endif
+                            @if ($suoiProposti->isNotEmpty())<span class="chip chip-attesa">{{ $suoiProposti->count() }} da confermare</span>@endif
+                            @if ($suoiFatti->isNotEmpty())<span class="chip chip-ok">{{ $suoiFatti->count() }} fatti</span>@endif
+                        </div>
+                    </div>
+
+                    @if ($suoi->isNotEmpty())
+                        <div class="lista">
+                            @foreach ($suoi as $c)
+                                @include('compiti.aperto')
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($suoiProposti->isNotEmpty())
+                        <div class="proposti-persona">
+                            @foreach ($suoiProposti as $c)
+                                <div><span class="chip chip-attesa">da confermare</span> {{ $c->testo }}</div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($suoiChiusi->isNotEmpty())
+                        <details class="chiusi-persona">
+                            <summary class="link-azione">Chiusi ({{ $suoiChiusi->count() }})</summary>
+                            @foreach ($suoiChiusi as $c)
+                                <div class="chiuso-riga">
+                                    <span class="chip">{{ \App\Models\Compito::STATI[$c->stato] }} {{ $c->chiuso_il?->format('d/m') }}</span>
+                                    <span class="{{ $c->stato === 'annullato' ? 'annullato' : '' }}">{{ $c->testo }}</span>
+                                    @if ($c->esito)<div class="note">{{ $c->esito }}</div>@endif
+                                </div>
+                            @endforeach
+                        </details>
+                    @endif
+
+                    <div class="piede">
+                        @if ($tagMacchine($p->macchine))<span class="tag">{{ $tagMacchine($p->macchine) }}</span>@endif
+                        @if ($p->contatti)<span class="mono">{{ $p->contatti }}</span>@endif
+                        <button type="button" class="link-azione" data-apri-compito="{{ $p->codice }}">+ compito</button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @empty
+        <p class="empty">La rubrica arriva dal PC alla prossima sincronizzazione.</p>
+    @endforelse
+
+    @if ($chiusi->isNotEmpty())
+        <details class="card">
+            <summary><h2 style="display:inline">Tutti i chiusi <span class="conta">{{ $chiusi->count() }}</span></h2></summary>
+            @foreach ($chiusi as $c)
+                <div class="compito chiuso" data-compito="{{ route('compiti.aggiorna', $c) }}">
+                    <div class="t {{ $c->stato === 'annullato' ? 'annullato' : '' }}">{{ $c->testo }}</div>
+                    <div class="meta">
+                        <span class="chip">{{ \App\Models\Compito::STATI[$c->stato] }} {{ $c->chiuso_il?->format('d/m') }}</span>
+                        <span>{{ $nomeDi($c->persona) }}</span>
+                        @if ($tagMacchine($c->macchine))<span class="tag">{{ $tagMacchine($c->macchine) }}</span>@endif
+                    </div>
+                    @if ($c->esito)<div class="note">{{ $c->esito }}</div>@endif
+                    <div><button type="button" class="link-azione" data-azione="aperto">Riapri</button> <span class="err" aria-live="polite"></span></div>
+                </div>
+            @endforeach
+        </details>
+    @endif
 </div>
 @endsection
 
@@ -198,6 +207,16 @@
     const token = document.querySelector('meta[name=csrf-token]').content;
     const posta = (url, corpo) => fetch(url, { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
     const errore = async r => { try { const j = await r.json(); return Object.values(j.errors || {}).flat()[0] || j.message || 'Non salvato, riprova.'; } catch (e) { return 'Non salvato, riprova (sessione scaduta? ricarica la pagina).'; } };
+
+    // --- filtro: solo le persone con compiti aperti o da confermare (ricordato nel browser) ---
+    const solo = document.getElementById('solo-con-compiti');
+    const filtra = () => {
+        document.querySelectorAll('.box-persona').forEach(b => b.hidden = solo.checked && !b.hasAttribute('data-con-compiti'));
+        try { localStorage.setItem('compiti-solo', solo.checked ? '1' : ''); } catch (e) {}
+    };
+    try { solo.checked = localStorage.getItem('compiti-solo') === '1'; } catch (e) {}
+    solo.addEventListener('change', filtra);
+    filtra();
 
     // --- nuovo compito ---
     const form = document.getElementById('compito-form');

@@ -104,7 +104,7 @@ class CompitiTest extends TestCase
         $this->assertSame('aperto', $c->stato);
         $this->assertTrue($c->scaduto());
 
-        $this->get('/salpa/compiti')->assertOk()->assertSee('scaduto il 01/01');
+        $this->get('/salpa/compiti')->assertOk()->assertSee('scaduto il 01/01')->assertSee('box-persona stato-rischio', false)->assertSee('1 scaduti');
         $this->get('/salpa')->assertOk()->assertSee('Chiudere il tema protocollo');
         $this->withToken(self::TOKEN)->getJson('/api/spunte')->assertOk()->assertJsonPath('compiti.0.id', 'w'.$c->id);
     }

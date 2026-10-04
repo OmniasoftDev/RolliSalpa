@@ -212,3 +212,27 @@ details.card summary { cursor: pointer }
 .persona:last-child { border-bottom: 0 }
 .gruppo-persone { font: 600 .74rem var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin-top: 6px }
 @media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr) } }
+.compiti-pagina > .card { margin-bottom: 18px }
+.filtro-persone { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin: 6px 0 4px }
+.filtro-persone h2 { margin: 0 }
+.filtro-persone label { font-size: .85rem; color: var(--muted); cursor: pointer }
+.compiti-pagina .gruppo-persone { margin: 14px 0 8px }
+.griglia-persone { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; align-items: start; margin-bottom: 6px }
+.box-persona { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--off); border-radius: 8px; padding: 10px 14px; display: grid; gap: 8px; min-width: 0 }
+.box-persona[hidden] { display: none }
+.box-persona.stato-rischio { border-top-color: var(--risk) }
+.box-persona.stato-corso { border-top-color: var(--run) }
+.box-persona.stato-attesa { border-top-color: var(--wait) }
+.box-persona.stato-vuoto { background: var(--off-bg) }
+.box-persona .testa { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; align-items: start }
+.box-persona .testa .who { margin-top: 0 }
+.box-persona .conti { display: flex; flex-wrap: wrap; gap: 4px }
+.box-persona .lista { border-top: 1px solid var(--line) }
+.box-persona .proposti-persona { display: grid; gap: 4px; font-size: .85rem; color: var(--muted) }
+.box-persona .chiusi-persona { font-size: .85rem }
+.box-persona .chiuso-riga { padding: 4px 0; overflow-wrap: anywhere }
+.box-persona .chiuso-riga .annullato { text-decoration: line-through; color: var(--muted) }
+.box-persona .piede { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: .8rem; color: var(--muted); overflow-wrap: anywhere }
+.chip.chip-corso { background: var(--run-bg); color: var(--run) }
+.chip.chip-attesa { background: var(--wait-bg); color: var(--wait) }
+.chip.chip-ok { background: var(--ok-bg); color: var(--ok) }
