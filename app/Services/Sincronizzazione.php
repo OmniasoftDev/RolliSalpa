@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Appuntamento;
 use App\Models\Compito;
 use App\Models\Decisione;
 use App\Models\Event;
@@ -82,8 +83,9 @@ class Sincronizzazione
             $decisioni = $this->decisioni($progetto, is_array($dati['decisioni'] ?? null) ? $dati['decisioni'] : []);
             $persone = $this->persone($progetto, is_array($dati['persone'] ?? null) ? $dati['persone'] : []);
             $proposti = $this->compitiProposti($progetto, is_array($dati['compitiProposti'] ?? null) ? $dati['compitiProposti'] : []);
+            $appuntamenti = $this->appuntamenti($progetto, is_array($dati['appuntamenti'] ?? null) ? $dati['appuntamenti'] : []);
 
-            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi), 'decisioni' => $decisioni, 'persone' => $persone, 'compitiProposti' => $proposti];
+            return ['progetto' => $slug, 'macchine' => count($codiciMacchine), 'domande' => $domande, 'eventi' => count($codiciEventi), 'decisioni' => $decisioni, 'persone' => $persone, 'compitiProposti' => $proposti, 'appuntamenti' => $appuntamenti];
         });
     }
 
@@ -209,6 +211,59 @@ class Sincronizzazione
         $progetto->compiti()->where('stato', 'proposto')->whereNotNull('codice')->whereNotIn('codice', $codici)->delete();
 
         return count($codici);
+    }
+
+    /**
+     * Appuntamenti proposti dal PC (inviti e mail): {id, titolo, inizio, fine, luogo, fonte, dettaglio, macchine, stato}.
+     * Restano "proposto" finche' Francesco non li accetta o rifiuta dal sito; la scelta del sito vince sul file.
+     * Il file puo' dire "accettato"/"rifiutato" quando Francesco ha risposto per mail o al telefono.
+     */
+    private function appuntamenti(Project $progetto, array $elenco): int
+    {
+        $codici = [];
+        foreach ($elenco as $a) {
+            $titolo = trim((string) ($a['titolo'] ?? ''));
+            $inizio = $this->dataOra($a['inizio'] ?? null);
+            $fine = $this->dataOra($a['fine'] ?? null);
+            if ($titolo === '' || ! $inizio || ! $fine || $fine->lte($inizio)) {
+                continue;
+            }
+            $codice = $this->codice($a['id'] ?? null, 'appuntamento');
+            $codici[] = $codice;
+            $app = Appuntamento::firstOrNew(['project_id' => $progetto->id, 'codice' => $codice]);
+            if ($app->exists && $app->stato !== 'proposto') {
+                continue;
+            }
+            $stato = in_array($a['stato'] ?? null, ['accettato', 'rifiutato'], true) ? $a['stato'] : 'proposto';
+            $app->fill([
+                'origine' => 'pc',
+                'titolo' => $titolo,
+                'dettaglio' => isset($a['dettaglio']) ? (string) $a['dettaglio'] : null,
+                'luogo' => isset($a['luogo']) ? mb_substr((string) $a['luogo'], 0, 250) : null,
+                'fonte' => isset($a['fonte']) ? mb_substr((string) $a['fonte'], 0, 250) : null,
+                'macchine' => array_values(array_filter((array) ($a['macchine'] ?? []), 'is_string')),
+                'inizio' => $inizio,
+                'fine' => $fine,
+                'stato' => $stato,
+                'deciso_il' => $stato === 'proposto' ? null : now(),
+            ])->save();
+        }
+        $progetto->appuntamenti()->where('origine', 'pc')->where('stato', 'proposto')->whereNotIn('codice', $codici)->delete();
+
+        return count($codici);
+    }
+
+    /** Data e ora ISO dal file ("2026-10-14T10:00:00+02:00"), portata nell'ora di Roma. */
+    private function dataOra(mixed $valore): ?\Illuminate\Support\Carbon
+    {
+        if (! is_string($valore) || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/', $valore)) {
+            return null;
+        }
+        try {
+            return \Illuminate\Support\Carbon::parse($valore)->setTimezone(config('app.timezone'));
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function codice(mixed $valore, string $cosa): string
