@@ -23,6 +23,9 @@
     $scadutiAttesi = $attesi->filter(fn ($c) => $c->scaduto());
     $oggi = today();
     $perGiorno = $calendario->groupBy(fn ($v) => $v['data']->format('Y-m-d'));
+    $accettateCal = $appuntamenti->where('origine', 'lavoro')->keyBy('codice');
+    $daAccettare = $appuntamenti->where('stato', 'proposto');
+    $decisiApp = $appuntamenti->where('origine', 'pc')->where('stato', '!=', 'proposto');
     $giorni = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
     $etichettaGiorno = fn ($d) => $d->isSameDay($oggi) ? 'Oggi' : ($d->isSameDay($oggi->copy()->addDay()) ? 'Domani' : ucfirst($giorni[$d->dayOfWeek]).' '.$d->format('d/m'));
     $numDomande = $domande->sum(fn ($g) => $g['domande']->count());
@@ -87,9 +90,44 @@
 
     <div class="lavoro-griglia">
         <div class="lavoro-col">
+            <div class="card {{ $daAccettare->isNotEmpty() ? 'card-attesa' : '' }}">
+                <h2>Appuntamenti <span class="conta">{{ $daAccettare->count() }}</span></h2>
+                <p class="note">Da inviti e mail. Nel calendario Google Salpa-Rolli va solo quello che accetti qui, o a cui rispondi ok per mail: il PC lo mette al prossimo controllo, con l'ora di inizio e di fine.</p>
+                @foreach ($daAccettare as $a)
+                    <div class="cal-voce tipo-decisione" data-appuntamento="{{ route('appuntamenti.segna', $a) }}">
+                        <div class="t">{{ $a->titolo }}</div>
+                        <div class="meta">
+                            <span class="chip chip-attesa">{{ $a->quando() }}</span>
+                            @if ($a->luogo)<span class="src">{{ $a->luogo }}</span>@endif
+                            @if ($tagMacchine($a->macchine))<span class="tag">{{ $tagMacchine($a->macchine) }}</span>@endif
+                            @if ($a->fonte)<span class="src">{{ $a->fonte }}</span>@endif
+                        </div>
+                        <div class="cal-azioni">
+                            <label class="sr" for="app-d-{{ $a->id }}">Data</label>
+                            <input type="date" id="app-d-{{ $a->id }}" class="sel" data-campo="data" value="{{ $a->inizio->format('Y-m-d') }}">
+                            <label class="sr" for="app-i-{{ $a->id }}">Inizio</label>
+                            <input type="time" id="app-i-{{ $a->id }}" class="sel" data-campo="inizio" step="300" value="{{ $a->inizio->format('H:i') }}">
+                            <label class="sr" for="app-f-{{ $a->id }}">Fine</label>
+                            <input type="time" id="app-f-{{ $a->id }}" class="sel" data-campo="fine" step="300" value="{{ $a->fine->format('H:i') }}">
+                            <button type="button" class="btn" data-stato="accettato">Accetta</button>
+                            <button type="button" class="btn btn-sec" data-stato="rifiutato">Rifiuta</button>
+                            <span class="err" aria-live="polite"></span>
+                        </div>
+                    </div>
+                @endforeach
+                @if ($daAccettare->isEmpty())<p class="empty">Nessun appuntamento da accettare.</p>@endif
+                @if ($decisiApp->isNotEmpty())
+                    <ul class="plain">
+                        @foreach ($decisiApp as $a)
+                            <li><span class="chip {{ $a->stato === 'accettato' ? 'chip-ok' : '' }}">{{ $a->stato === 'accettato' ? 'in calendario' : 'rifiutato' }}</span> {{ $a->quando() }} · {{ $a->titolo }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+
             <div class="card">
                 <h2>Calendario proposto <span class="conta">{{ $calendario->count() }}</span></h2>
-                <p class="note">Una data per ogni voce: la scadenza, oppure oggi se è passata o manca (per le risposte attese senza scadenza, una settimana dall'assegnazione). Cambia data e ora se vuoi (l'evento dura {{ \App\Services\LavoroFrancesco::MINUTI_EVENTO }} minuti), poi "Google Calendar" apre l'evento già compilato nel calendario Salpa-Rolli: lo salvi tu.</p>
+                <p class="note">Una data per ogni voce: la scadenza, oppure oggi se è passata o manca (per le risposte attese senza scadenza, una settimana dall'assegnazione). Scegli data e ora e premi "Accetta": il PC la mette nel calendario Google Salpa-Rolli ({{ \App\Services\LavoroFrancesco::MINUTI_EVENTO }} minuti) al prossimo controllo.</p>
                 @forelse ($perGiorno as $giorno => $voci)
                     <div class="cal-giorno">
                         <h3>{{ $etichettaGiorno($voci->first()['data']) }}</h3>
@@ -106,9 +144,9 @@
                                     <input type="date" id="cal-{{ $v['chiave'] }}" class="sel" value="{{ $v['data']->format('Y-m-d') }}">
                                     <label class="sr" for="ora-{{ $v['chiave'] }}">Ora</label>
                                     <input type="time" id="ora-{{ $v['chiave'] }}" class="sel" step="900" value="{{ \App\Services\LavoroFrancesco::ORA_EVENTO }}">
-                                    <a class="btn btn-sec" target="_blank" rel="noopener" data-gcal
-                                       href="{{ \App\Services\LavoroFrancesco::linkCalendario($v['titolo'], $v['data'], ($v['dettaglio'] ? 'Fonte: '.$v['dettaglio']."\n" : '').route('lavoro', $progetto->slug)) }}">Google Calendar</a>
-                                    <span class="chip chip-ok" data-in-calendario hidden></span>
+                                    <button type="button" class="btn btn-sec" data-accetta>Accetta</button>
+                                    <span class="chip chip-ok" data-accettata @if (! isset($accettateCal['cal-'.$v['chiave']])) hidden @endif>@isset($accettateCal['cal-'.$v['chiave']])accettato {{ $accettateCal['cal-'.$v['chiave']]->quando() }}@endisset</span>
+                                    <span class="err" aria-live="polite"></span>
                                 </div>
                             </div>
                         @endforeach
@@ -203,26 +241,30 @@
     const errore = async r => { try { const j = await r.json(); return j.errore || Object.values(j.errors || {}).flat()[0] || j.message || 'Non riuscito, riprova.'; } catch (e) { return 'Non riuscito, riprova (sessione scaduta? ricarica la pagina).'; } };
     const memoria = { leggi: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, scrivi: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 
-    // --- calendario: data e ora scelte entrano nel link (ora di Roma, durata fissa, calendario Salpa-Rolli);
-    //     "in calendario" e' ricordato solo in questo browser ---
-    const minuti = {{ \App\Services\LavoroFrancesco::MINUTI_EVENTO }}, calendario = @json((string) config('pannello.calendario'));
-    const gcal = (titolo, giorno, ora, dettaglio) => {
-        const [a, me, g] = giorno.split('-').map(Number), [h, m] = (ora || '{{ \App\Services\LavoroFrancesco::ORA_EVENTO }}').split(':').map(Number);
-        // UTC solo per sommare i minuti: l'ora resta quella scritta, il fuso lo dice ctz
-        const f = x => x.toISOString().slice(0, 19).replace(/[-:]/g, '');
-        const inizio = new Date(Date.UTC(a, me - 1, g, h, m)), fine = new Date(inizio.getTime() + minuti * 60000);
-        return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(titolo.slice(0, 200))
-            + '&dates=' + f(inizio) + '/' + f(fine) + '&ctz=Europe%2FRome&details=' + encodeURIComponent(dettaglio)
-            + (calendario ? '&src=' + encodeURIComponent(calendario) : '');
-    };
+    // --- calendario proposto: "Accetta" salva data e ora; il PC mette l'evento nel calendario Google Salpa-Rolli ---
     document.querySelectorAll('[data-cal]').forEach(v => {
-        const data = v.querySelector('input[type=date]'), ora = v.querySelector('input[type=time]'), link = v.querySelector('[data-gcal]'), segno = v.querySelector('[data-in-calendario]');
-        const mostra = () => { const g = memoria.leggi('cal-' + v.dataset.cal); segno.hidden = !g; if (g) segno.textContent = 'in calendario ' + g.split('-').reverse().slice(0, 2).join('/'); };
-        const aggiorna = () => { if (data.value) link.href = gcal(v.dataset.titolo, data.value, ora.value, v.dataset.dettaglio); };
-        data.addEventListener('change', aggiorna);
-        ora.addEventListener('change', aggiorna);
-        link.addEventListener('click', () => { memoria.scrivi('cal-' + v.dataset.cal, data.value); mostra(); });
-        mostra();
+        const data = v.querySelector('input[type=date]'), ora = v.querySelector('input[type=time]'), b = v.querySelector('[data-accetta]');
+        const segno = v.querySelector('[data-accettata]'), err = v.querySelector('.err');
+        b.addEventListener('click', async () => {
+            if (!data.value || !ora.value) { err.textContent = 'Scegli data e ora.'; return; }
+            b.disabled = true; err.textContent = '';
+            const r = await posta(@json(route('lavoro.appuntamento', $progetto->slug)), { chiave: v.dataset.cal, titolo: v.dataset.titolo, dettaglio: v.dataset.dettaglio, data: data.value, ora: ora.value }).catch(() => null);
+            if (r && r.ok) { const j = await r.json(); segno.textContent = 'accettato ' + j.quando; segno.hidden = false; }
+            else err.textContent = r ? await errore(r) : 'Rete non raggiungibile, riprova.';
+            b.disabled = false;
+        });
+    });
+
+    // --- appuntamenti proposti dal PC: accetta (con data e ore scelte) o rifiuta ---
+    document.querySelectorAll('[data-appuntamento]').forEach(v => {
+        v.querySelectorAll('[data-stato]').forEach(b => b.addEventListener('click', async () => {
+            const corpo = { stato: b.dataset.stato };
+            v.querySelectorAll('[data-campo]').forEach(c => corpo[c.dataset.campo] = c.value || null);
+            b.disabled = true;
+            const r = await posta(v.dataset.appuntamento, corpo).catch(() => null);
+            if (r && r.ok) location.reload();
+            else { v.querySelector('.err').textContent = r ? await errore(r) : 'Rete non raggiungibile, riprova.'; b.disabled = false; }
+        }));
     });
 
     // --- decisioni: stessa spunta del Quadro ---

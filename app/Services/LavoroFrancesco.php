@@ -45,17 +45,19 @@ class LavoroFrancesco
             'decisioni' => $decisioni,
             'domande' => $perChi,
             'calendario' => $this->calendario($miei, $attesi, $decisioni, $persone),
+            // da accettare (proposti dal PC) e gia' decisi, dal giorno prima in poi; le voci del calendario accettate stanno in "cal-..."
+            'appuntamenti' => $progetto->appuntamenti()->where('fine', '>=', now()->subDay())->get(),
         ];
     }
 
-    /** Ora proposta e durata degli eventi del calendario: l'ora si cambia nella pagina prima di aprire Google Calendar. */
+    /** Ora proposta e durata di una voce del calendario quando Francesco la accetta (l'ora si cambia nella pagina). */
     public const ORA_EVENTO = '09:00';
 
     public const MINUTI_EVENTO = 30;
 
     /**
      * Proposte di calendario: una per compito o decisione, alla scadenza; se la scadenza e' passata o manca,
-     * al primo giorno lavorativo utile. Francesco la accetta (o cambia data) e la manda a Google Calendar.
+     * al primo giorno lavorativo utile. Francesco la accetta con data e ora: il PC la mette nel calendario Google Salpa-Rolli.
      */
     public function calendario(Collection $miei, Collection $attesi, Collection $decisioni, Collection $persone): Collection
     {
@@ -140,25 +142,5 @@ class LavoroFrancesco
     public static function mailDi(?Persona $p): ?string
     {
         return $p && preg_match('/[\w.+-]+@[\w-]+(\.[\w-]+)+/u', (string) $p->contatti, $m) ? $m[0] : null;
-    }
-
-    /**
-     * Link "aggiungi evento" di Google Calendar a orario preciso (mai di tutto il giorno, Francesco 05/10/2026),
-     * ora di Roma, nel calendario indicato in config('pannello.calendario').
-     */
-    public static function linkCalendario(string $titolo, Carbon $data, ?string $dettaglio, string $ora = self::ORA_EVENTO): string
-    {
-        [$h, $m] = array_map('intval', explode(':', $ora.':0'));
-        $inizio = $data->copy()->setTime($h, $m);
-        $fine = $inizio->copy()->addMinutes(self::MINUTI_EVENTO);
-
-        return 'https://calendar.google.com/calendar/render?'.http_build_query(array_filter([
-            'action' => 'TEMPLATE',
-            'text' => mb_strimwidth($titolo, 0, 200, '…'),
-            'dates' => $inizio->format('Ymd\THis').'/'.$fine->format('Ymd\THis'),
-            'ctz' => 'Europe/Rome',
-            'details' => (string) $dettaglio,
-            'src' => (string) config('pannello.calendario'),
-        ]), '', '&', PHP_QUERY_RFC3986);
     }
 }

@@ -43,6 +43,11 @@ class Project extends Model
         return $this->hasMany(Compito::class);
     }
 
+    public function appuntamenti(): HasMany
+    {
+        return $this->hasMany(Appuntamento::class)->orderBy('inizio');
+    }
+
     /** Valore di progetto/info, con un default. */
     public function info(string $chiave, mixed $default = null): mixed
     {
