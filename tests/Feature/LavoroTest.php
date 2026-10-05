@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Appuntamento;
 use App\Models\Compito;
 use App\Models\Persona;
 use App\Models\Project;
@@ -64,71 +63,24 @@ class LavoroTest extends TestCase
             ->assertSee('Verificare Roberto Merlotti: Sollecitare CFT')
             ->assertSee('Protocollo verso lo SCADA?')
             ->assertDontSee('Esito call del 03/09')
-            // si accetta con data e ora; nessun link diretto a Google Calendar
-            ->assertSee('data-accetta', false)
-            ->assertSee('type="time"', false)
-            ->assertDontSee('calendar.google.com', false);
+            ->assertSee('calendar.google.com/calendar/render?action=TEMPLATE', false)
+            // a orario preciso (9:00-9:30, ora di Roma), nel calendario Salpa-Rolli: mai eventi di tutto il giorno
+            ->assertSee('20261009T090000%2F20261009T093000', false)
+            ->assertSee('ctz=Europe%2FRome', false)
+            ->assertSee('src=15d308d04bcc0b634523e7a3fe5ea816fc2ddfb6a69286adc4e2ae30ad027361%40group.calendar.google.com', false)
+            ->assertSee('type="time"', false);
 
         // dal quadro si arriva alla pagina
         $this->get('/salpa')->assertOk()->assertSee('Il mio lavoro');
     }
 
-    public function test_accettare_una_voce_del_calendario_la_manda_al_pc(): void
+    public function test_link_calendario_con_ora_scelta(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->postJson('/salpa/lavoro/appuntamento', ['chiave' => 'c12', 'titolo' => 'Preparare la relazione settimanale', 'data' => '2026-10-09', 'ora' => '10:15'])
-            ->assertOk()->assertJson(['quando' => 'ven 09/10 10:15–10:45']);
+        $link = LavoroFrancesco::linkCalendario('Giro macchine', \Illuminate\Support\Carbon::parse('2026-10-07'), 'Fonte: invito', '10:15');
 
-        $a = Appuntamento::where('codice', 'cal-c12')->firstOrFail();
-        $this->assertSame(['accettato', 'lavoro'], [$a->stato, $a->origine]);
-
-        $spunte = $this->withToken('token-di-prova-lungo-almeno-trentadue-caratteri')->getJson('/api/spunte')->assertOk()->json('appuntamenti');
-        $this->assertSame('cal-c12', $spunte[0]['id']);
-        $this->assertSame('2026-10-09T10:15:00+02:00', $spunte[0]['inizio']);
-        $this->assertSame('2026-10-09T10:45:00+02:00', $spunte[0]['fine']);
-
-        // riaccettata con un'altra ora: stessa voce, orario aggiornato
-        $this->postJson('/salpa/lavoro/appuntamento', ['chiave' => 'c12', 'titolo' => 'Preparare la relazione settimanale', 'data' => '2026-10-09', 'ora' => '15:00'])->assertOk();
-        $this->assertSame(1, Appuntamento::count());
-        $this->assertSame('15:00', Appuntamento::first()->inizio->format('H:i'));
-    }
-
-    public function test_appuntamenti_proposti_dal_pc_si_accettano_o_rifiutano(): void
-    {
-        $file = fn (array $appuntamenti) => app(Sincronizzazione::class)->applica(['progetto' => 'salpa', 'nome' => 'Salpa', 'macchine' => [], 'eventi' => [], 'appuntamenti' => $appuntamenti]);
-        $file([
-            ['id' => 'ap1', 'titolo' => 'Salpa - Attivazione 4.0 tunnel JBT', 'inizio' => '2026-10-14T10:00:00+02:00', 'fine' => '2026-10-14T12:30:00+02:00', 'luogo' => 'Microsoft Teams', 'fonte' => 'Invito 05/10 Merlotti', 'macchine' => ['m01']],
-            ['id' => 'ap2', 'titolo' => 'Salpa - Call Polin', 'inizio' => '2026-10-15T11:00:00+02:00', 'fine' => '2026-10-15T11:30:00+02:00'],
-        ]);
-        $this->actingAs(User::factory()->create())->get('/salpa/lavoro')->assertOk()
-            ->assertSee('Salpa - Attivazione 4.0 tunnel JBT')->assertSee('mer 14/10 10:00–12:30');
-
-        $jbt = Appuntamento::where('codice', 'ap1')->firstOrFail();
-        // accettato spostando la fine; la call Polin rifiutata
-        $this->postJson('/appuntamenti/'.$jbt->id, ['stato' => 'accettato', 'data' => '2026-10-14', 'inizio' => '10:00', 'fine' => '12:00'])->assertOk();
-        $this->postJson('/appuntamenti/'.Appuntamento::where('codice', 'ap2')->value('id'), ['stato' => 'rifiutato'])->assertOk();
-        $this->postJson('/appuntamenti/'.$jbt->id, ['stato' => 'accettato', 'data' => '2026-10-14', 'inizio' => '12:00', 'fine' => '10:00'])->assertStatus(422);
-
-        // il file non cambia piu' le scelte di Francesco, e un proposto sparito dal file sparisce
-        $file([['id' => 'ap1', 'titolo' => 'Salpa - JBT (cambiato dal PC)', 'inizio' => '2026-10-14T08:00:00+02:00', 'fine' => '2026-10-14T09:00:00+02:00']]);
-        $jbt->refresh();
-        $this->assertSame(['accettato', '12:00'], [$jbt->stato, $jbt->fine->format('H:i')]);
-        $this->assertSame('rifiutato', Appuntamento::where('codice', 'ap2')->value('stato'));
-
-        $spunte = collect($this->withToken('token-di-prova-lungo-almeno-trentadue-caratteri')->getJson('/api/spunte')->json('appuntamenti'))->keyBy('id');
-        $this->assertSame('accettato', $spunte['ap1']['stato']);
-        $this->assertSame('2026-10-14T12:00:00+02:00', $spunte['ap1']['fine']);
-        $this->assertSame('rifiutato', $spunte['ap2']['stato']);
-    }
-
-    public function test_appuntamento_accettato_per_mail_arriva_gia_accettato_dal_file(): void
-    {
-        app(Sincronizzazione::class)->applica(['progetto' => 'salpa', 'nome' => 'Salpa', 'macchine' => [], 'eventi' => [], 'appuntamenti' => [
-            ['id' => 'ap3', 'titolo' => 'Salpa - Riunione', 'inizio' => '2026-10-07T09:45:00+02:00', 'fine' => '2026-10-07T10:15:00+02:00', 'stato' => 'accettato'],
-            ['id' => 'ap4', 'titolo' => 'Senza fine', 'inizio' => '2026-10-07T09:45:00+02:00'],
-        ]]);
-        $this->assertSame('accettato', Appuntamento::where('codice', 'ap3')->value('stato'));
-        $this->assertNull(Appuntamento::where('codice', 'ap4')->first());
+        $this->assertStringContainsString('dates=20261007T101500%2F20261007T104500', $link);
+        $this->assertStringContainsString('ctz=Europe%2FRome', $link);
+        $this->assertStringNotContainsString('dates=20261007%2F20261008', $link);
     }
 
     public function test_date_proposte_dal_calendario(): void

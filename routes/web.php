@@ -29,8 +29,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/compiti/{compito}', [CompitiController::class, 'aggiorna'])->name('compiti.aggiorna');
     Route::get('/{slug}/lavoro', [LavoroController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('lavoro');
     Route::post('/{slug}/lavoro/bozza', [LavoroController::class, 'bozza'])->where('slug', '[a-z0-9-]+')->middleware('throttle:20,1')->name('lavoro.bozza');
-    Route::post('/{slug}/lavoro/appuntamento', [LavoroController::class, 'accetta'])->where('slug', '[a-z0-9-]+')->name('lavoro.appuntamento');
-    Route::post('/appuntamenti/{appuntamento}', [LavoroController::class, 'appuntamento'])->name('appuntamenti.segna');
     Route::delete('/appunti/{appunto}', [AppuntiController::class, 'destroy'])->name('appunti.destroy');
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file'])->name('allegati.file');
     Route::get('/registro', [RegistroController::class, 'show'])->name('registro');

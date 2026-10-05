@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Anthropic\Core\Exceptions\APIStatusException;
-use App\Models\Appuntamento;
 use App\Models\Compito;
 use App\Models\Event;
 use App\Models\Machine;
@@ -12,7 +11,6 @@ use App\Models\Question;
 use App\Services\BozzaMail;
 use App\Services\LavoroFrancesco;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -84,56 +82,6 @@ class LavoroController extends Controller
         }
 
         return response()->json($mail + ['a' => LavoroFrancesco::mailDi($persona)]);
-    }
-
-    /**
-     * POST /{slug}/lavoro/appuntamento — Francesco accetta una voce del calendario proposto, con data e ora:
-     * diventa un appuntamento accettato che il PC mette nel calendario Google Salpa-Rolli.
-     */
-    public function accetta(Request $request, string $slug): JsonResponse
-    {
-        $progetto = Project::where('slug', $slug)->firstOrFail();
-        $dati = $request->validate([
-            'chiave' => ['required', 'string', 'regex:/^[A-Za-z0-9_.-]{1,50}$/'],
-            'titolo' => ['required', 'string', 'max:500'],
-            'dettaglio' => ['nullable', 'string', 'max:2000'],
-            'data' => ['required', 'date_format:Y-m-d'],
-            'ora' => ['required', 'date_format:H:i'],
-        ]);
-        $inizio = Carbon::createFromFormat('Y-m-d H:i', $dati['data'].' '.$dati['ora']);
-        $app = Appuntamento::updateOrCreate(['project_id' => $progetto->id, 'codice' => 'cal-'.$dati['chiave']], [
-            'origine' => 'lavoro',
-            'titolo' => $dati['titolo'],
-            'dettaglio' => $dati['dettaglio'] ?? null,
-            'inizio' => $inizio,
-            'fine' => $inizio->copy()->addMinutes(LavoroFrancesco::MINUTI_EVENTO),
-            'stato' => 'accettato',
-            'deciso_il' => now(),
-        ]);
-
-        return response()->json(['ok' => true, 'quando' => $app->quando()]);
-    }
-
-    /** POST /appuntamenti/{appuntamento} — accetta (anche cambiando data e ore) o rifiuta un appuntamento proposto. */
-    public function appuntamento(Request $request, Appuntamento $appuntamento): JsonResponse
-    {
-        $dati = $request->validate([
-            'stato' => ['required', Rule::in(['accettato', 'rifiutato'])],
-            'data' => ['nullable', 'date_format:Y-m-d'],
-            'inizio' => ['nullable', 'date_format:H:i'],
-            'fine' => ['nullable', 'date_format:H:i'],
-        ]);
-        if ($dati['stato'] === 'accettato' && ! empty($dati['data']) && ! empty($dati['inizio']) && ! empty($dati['fine'])) {
-            $inizio = Carbon::createFromFormat('Y-m-d H:i', $dati['data'].' '.$dati['inizio']);
-            $fine = Carbon::createFromFormat('Y-m-d H:i', $dati['data'].' '.$dati['fine']);
-            if ($fine->lte($inizio)) {
-                return response()->json(['errore' => 'L\'ora di fine deve venire dopo l\'inizio.'], 422);
-            }
-            $appuntamento->fill(['inizio' => $inizio, 'fine' => $fine]);
-        }
-        $appuntamento->fill(['stato' => $dati['stato'], 'deciso_il' => now()])->save();
-
-        return response()->json(['ok' => true]);
     }
 
     /** Ultimi fatti del progetto che citano la persona (per cognome), da dare a Claude come contesto. */

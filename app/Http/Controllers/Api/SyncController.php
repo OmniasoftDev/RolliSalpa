@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Appuntamento;
 use App\Models\Compito;
 use App\Models\Decisione;
 use App\Models\Question;
@@ -100,24 +99,6 @@ class SyncController extends Controller
                 'aggiornato' => $c->updated_at?->format('Y-m-d H:i'),
             ]);
 
-        // Appuntamenti accettati o rifiutati da Francesco: il PC mette gli accettati nel calendario Google Salpa-Rolli
-        $appuntamenti = Appuntamento::with('project')->where('stato', '!=', 'proposto')->orderBy('inizio')->get()
-            ->map(fn (Appuntamento $a) => [
-                'progetto' => $a->project->slug,
-                'id' => $a->codice,
-                'origine' => $a->origine,
-                'titolo' => $a->titolo,
-                'dettaglio' => $a->dettaglio,
-                'luogo' => $a->luogo,
-                'fonte' => $a->fonte,
-                'macchine' => $a->macchine ?? [],
-                'inizio' => $a->inizio->toIso8601String(),
-                'fine' => $a->fine->toIso8601String(),
-                'stato' => $a->stato,
-                'decisoIl' => $a->deciso_il?->format('Y-m-d H:i'),
-                'aggiornato' => $a->updated_at?->format('Y-m-d H:i'),
-            ]);
-
-        return response()->json(['spunte' => $spunte, 'decisioni' => $decisioni, 'compiti' => $compiti, 'appuntamenti' => $appuntamenti]);
+        return response()->json(['spunte' => $spunte, 'decisioni' => $decisioni, 'compiti' => $compiti]);
     }
 }
