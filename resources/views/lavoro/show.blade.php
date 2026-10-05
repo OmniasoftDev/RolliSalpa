@@ -89,7 +89,7 @@
         <div class="lavoro-col">
             <div class="card">
                 <h2>Calendario proposto <span class="conta">{{ $calendario->count() }}</span></h2>
-                <p class="note">Una data per ogni voce: la scadenza, oppure oggi se è passata o manca (per le risposte attese senza scadenza, una settimana dall'assegnazione). Cambia la data se vuoi, poi "Google Calendar" apre l'evento già compilato: lo salvi tu.</p>
+                <p class="note">Una data per ogni voce: la scadenza, oppure oggi se è passata o manca (per le risposte attese senza scadenza, una settimana dall'assegnazione). Cambia data e ora se vuoi (l'evento dura {{ \App\Services\LavoroFrancesco::MINUTI_EVENTO }} minuti), poi "Google Calendar" apre l'evento già compilato nel calendario Salpa-Rolli: lo salvi tu.</p>
                 @forelse ($perGiorno as $giorno => $voci)
                     <div class="cal-giorno">
                         <h3>{{ $etichettaGiorno($voci->first()['data']) }}</h3>
@@ -104,6 +104,8 @@
                                 <div class="cal-azioni">
                                     <label class="sr" for="cal-{{ $v['chiave'] }}">Data</label>
                                     <input type="date" id="cal-{{ $v['chiave'] }}" class="sel" value="{{ $v['data']->format('Y-m-d') }}">
+                                    <label class="sr" for="ora-{{ $v['chiave'] }}">Ora</label>
+                                    <input type="time" id="ora-{{ $v['chiave'] }}" class="sel" step="900" value="{{ \App\Services\LavoroFrancesco::ORA_EVENTO }}">
                                     <a class="btn btn-sec" target="_blank" rel="noopener" data-gcal
                                        href="{{ \App\Services\LavoroFrancesco::linkCalendario($v['titolo'], $v['data'], ($v['dettaglio'] ? 'Fonte: '.$v['dettaglio']."\n" : '').route('lavoro', $progetto->slug)) }}">Google Calendar</a>
                                     <span class="chip chip-ok" data-in-calendario hidden></span>
@@ -201,17 +203,24 @@
     const errore = async r => { try { const j = await r.json(); return j.errore || Object.values(j.errors || {}).flat()[0] || j.message || 'Non riuscito, riprova.'; } catch (e) { return 'Non riuscito, riprova (sessione scaduta? ricarica la pagina).'; } };
     const memoria = { leggi: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, scrivi: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 
-    // --- calendario: la data scelta entra nel link; "in calendario" e' ricordato solo in questo browser ---
-    const gcal = (titolo, giorno, dettaglio) => {
-        const d = new Date(giorno + 'T12:00:00'), dopo = new Date(d.getTime() + 86400000);
-        const f = x => x.toISOString().slice(0, 10).replaceAll('-', '');
+    // --- calendario: data e ora scelte entrano nel link (ora di Roma, durata fissa, calendario Salpa-Rolli);
+    //     "in calendario" e' ricordato solo in questo browser ---
+    const minuti = {{ \App\Services\LavoroFrancesco::MINUTI_EVENTO }}, calendario = @json((string) config('pannello.calendario'));
+    const gcal = (titolo, giorno, ora, dettaglio) => {
+        const [a, me, g] = giorno.split('-').map(Number), [h, m] = (ora || '{{ \App\Services\LavoroFrancesco::ORA_EVENTO }}').split(':').map(Number);
+        // UTC solo per sommare i minuti: l'ora resta quella scritta, il fuso lo dice ctz
+        const f = x => x.toISOString().slice(0, 19).replace(/[-:]/g, '');
+        const inizio = new Date(Date.UTC(a, me - 1, g, h, m)), fine = new Date(inizio.getTime() + minuti * 60000);
         return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(titolo.slice(0, 200))
-            + '&dates=' + f(d) + '/' + f(dopo) + '&details=' + encodeURIComponent(dettaglio);
+            + '&dates=' + f(inizio) + '/' + f(fine) + '&ctz=Europe%2FRome&details=' + encodeURIComponent(dettaglio)
+            + (calendario ? '&src=' + encodeURIComponent(calendario) : '');
     };
     document.querySelectorAll('[data-cal]').forEach(v => {
-        const data = v.querySelector('input[type=date]'), link = v.querySelector('[data-gcal]'), segno = v.querySelector('[data-in-calendario]');
+        const data = v.querySelector('input[type=date]'), ora = v.querySelector('input[type=time]'), link = v.querySelector('[data-gcal]'), segno = v.querySelector('[data-in-calendario]');
         const mostra = () => { const g = memoria.leggi('cal-' + v.dataset.cal); segno.hidden = !g; if (g) segno.textContent = 'in calendario ' + g.split('-').reverse().slice(0, 2).join('/'); };
-        data.addEventListener('change', () => { if (data.value) link.href = gcal(v.dataset.titolo, data.value, v.dataset.dettaglio); });
+        const aggiorna = () => { if (data.value) link.href = gcal(v.dataset.titolo, data.value, ora.value, v.dataset.dettaglio); };
+        data.addEventListener('change', aggiorna);
+        ora.addEventListener('change', aggiorna);
         link.addEventListener('click', () => { memoria.scrivi('cal-' + v.dataset.cal, data.value); mostra(); });
         mostra();
     });

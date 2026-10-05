@@ -48,6 +48,11 @@ class LavoroFrancesco
         ];
     }
 
+    /** Ora proposta e durata degli eventi del calendario: l'ora si cambia nella pagina prima di aprire Google Calendar. */
+    public const ORA_EVENTO = '09:00';
+
+    public const MINUTI_EVENTO = 30;
+
     /**
      * Proposte di calendario: una per compito o decisione, alla scadenza; se la scadenza e' passata o manca,
      * al primo giorno lavorativo utile. Francesco la accetta (o cambia data) e la manda a Google Calendar.
@@ -137,14 +142,23 @@ class LavoroFrancesco
         return $p && preg_match('/[\w.+-]+@[\w-]+(\.[\w-]+)+/u', (string) $p->contatti, $m) ? $m[0] : null;
     }
 
-    /** Link "aggiungi evento" di Google Calendar per un evento di tutto il giorno. */
-    public static function linkCalendario(string $titolo, Carbon $data, ?string $dettaglio): string
+    /**
+     * Link "aggiungi evento" di Google Calendar a orario preciso (mai di tutto il giorno, Francesco 05/10/2026),
+     * ora di Roma, nel calendario indicato in config('pannello.calendario').
+     */
+    public static function linkCalendario(string $titolo, Carbon $data, ?string $dettaglio, string $ora = self::ORA_EVENTO): string
     {
-        return 'https://calendar.google.com/calendar/render?'.http_build_query([
+        [$h, $m] = array_map('intval', explode(':', $ora.':0'));
+        $inizio = $data->copy()->setTime($h, $m);
+        $fine = $inizio->copy()->addMinutes(self::MINUTI_EVENTO);
+
+        return 'https://calendar.google.com/calendar/render?'.http_build_query(array_filter([
             'action' => 'TEMPLATE',
             'text' => mb_strimwidth($titolo, 0, 200, '…'),
-            'dates' => $data->format('Ymd').'/'.$data->copy()->addDay()->format('Ymd'),
+            'dates' => $inizio->format('Ymd\THis').'/'.$fine->format('Ymd\THis'),
+            'ctz' => 'Europe/Rome',
             'details' => (string) $dettaglio,
-        ], '', '&', PHP_QUERY_RFC3986);
+            'src' => (string) config('pannello.calendario'),
+        ]), '', '&', PHP_QUERY_RFC3986);
     }
 }

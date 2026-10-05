@@ -64,10 +64,23 @@ class LavoroTest extends TestCase
             ->assertSee('Protocollo verso lo SCADA?')
             ->assertDontSee('Esito call del 03/09')
             ->assertSee('calendar.google.com/calendar/render?action=TEMPLATE', false)
-            ->assertSee('20261009%2F20261010', false);
+            // a orario preciso (9:00-9:30, ora di Roma), nel calendario Salpa-Rolli: mai eventi di tutto il giorno
+            ->assertSee('20261009T090000%2F20261009T093000', false)
+            ->assertSee('ctz=Europe%2FRome', false)
+            ->assertSee('src=15d308d04bcc0b634523e7a3fe5ea816fc2ddfb6a69286adc4e2ae30ad027361%40group.calendar.google.com', false)
+            ->assertSee('type="time"', false);
 
         // dal quadro si arriva alla pagina
         $this->get('/salpa')->assertOk()->assertSee('Il mio lavoro');
+    }
+
+    public function test_link_calendario_con_ora_scelta(): void
+    {
+        $link = LavoroFrancesco::linkCalendario('Giro macchine', \Illuminate\Support\Carbon::parse('2026-10-07'), 'Fonte: invito', '10:15');
+
+        $this->assertStringContainsString('dates=20261007T101500%2F20261007T104500', $link);
+        $this->assertStringContainsString('ctz=Europe%2FRome', $link);
+        $this->assertStringNotContainsString('dates=20261007%2F20261008', $link);
     }
 
     public function test_date_proposte_dal_calendario(): void
