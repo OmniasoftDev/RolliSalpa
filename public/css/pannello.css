@@ -236,3 +236,33 @@ details.card summary { cursor: pointer }
 .chip.chip-corso { background: var(--run-bg); color: var(--run) }
 .chip.chip-attesa { background: var(--wait-bg); color: var(--wait) }
 .chip.chip-ok { background: var(--ok-bg); color: var(--ok) }
+/* Il mio lavoro */
+.card-rischio { border-top: 3px solid var(--risk) }
+.lavoro-griglia { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 18px; align-items: start }
+.lavoro-col { display: grid; gap: 18px; min-width: 0 }
+@media (max-width: 900px) { .lavoro-griglia { grid-template-columns: minmax(0, 1fr) } }
+.cal-giorno { display: grid; gap: 8px }
+.cal-giorno h3 { font-size: .95rem; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px }
+.cal-voce { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-left: 3px solid var(--off); border-radius: 6px; background: var(--bg) }
+.cal-voce.tipo-mio { border-left-color: var(--run) }
+.cal-voce.tipo-decisione { border-left-color: var(--wait) }
+.cal-voce.scaduto { border-left-color: var(--risk) }
+.cal-voce .t { font-size: .92rem; overflow-wrap: anywhere }
+.cal-voce .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: .8rem; color: var(--muted) }
+.cal-azioni { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.cal-azioni .sel { width: auto; min-height: 34px; padding: 4px 8px }
+.cal-azioni .btn { padding: 5px 10px; font-size: .82rem; text-decoration: none }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+.attesa-persona { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--line) }
+.attesa-persona:last-child { border-bottom: 0 }
+.attesa-persona > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline }
+.attesa-persona .plain { font-size: .9rem; margin: 6px 0 }
+.attesa-persona .compito { padding: 6px 0 }
+.attesa-persona > .link-azione { justify-self: start }
+.voce-mail { margin: -4px 0 6px }
+.bozza-form .note { margin: 0 }
+.bozza-form .err { color: var(--muted); font-size: .85rem }
+.bozza-risultato { display: grid; gap: 10px }
+.bozza-risultato[hidden] { display: none }
+.bozza-form .azioni { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+a.btn { text-decoration: none; display: inline-block }
