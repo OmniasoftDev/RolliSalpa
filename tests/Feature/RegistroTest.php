@@ -114,4 +114,15 @@ class RegistroTest extends TestCase
         $this->withToken(self::TOKEN)->postJson('/api/controlli', $this->pacchetto([$this->mail($a, '2026-10-02 15:16:00', ['elaborata' => '2026-10-02 18:00:00'])], [$a], '2026-10-02 18:00:01'))->assertOk();
         $this->assertNotNull($m->fresh()->vista_at);
     }
+
+    public function test_fuori_orario_il_silenzio_del_pc_non_e_un_fermo(): void
+    {
+        $alle = fn (string $t) => \App\Services\Registro::inOrario(\Illuminate\Support\Carbon::parse($t));
+
+        $this->assertTrue($alle('2026-10-05 08:15'));   // lunedi', 15 minuti dopo il primo controllo
+        $this->assertTrue($alle('2026-10-05 20:15'));   // margine dopo l'ultimo delle 20:00
+        $this->assertFalse($alle('2026-10-05 08:10'));  // la notte non ha controlli: il primo arriva alle 8:00
+        $this->assertFalse($alle('2026-10-05 20:58'));  // falso allarme visto il 05/10/2026
+        $this->assertFalse($alle('2026-10-10 11:00'));  // sabato
+    }
 }

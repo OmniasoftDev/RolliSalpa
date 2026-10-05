@@ -1,9 +1,9 @@
 @php
     $quando = fn ($s) => $s ? \Illuminate\Support\Carbon::parse($s)->format('d/m H:i') : '–';
     $ultimo = isset($statoPc['controllo']) ? \Illuminate\Support\Carbon::parse($statoPc['controllo']) : null;
-    // In orario di lavoro (lun-ven 8-21) il PC controlla ogni 5 minuti: oltre 15 minuti di silenzio c'e' qualcosa che non va.
-    $oraLavoro = now()->isWeekday() && now()->hour >= 8 && now()->hour < 21;
-    $fermo = $oraLavoro && (! $ultimo || $ultimo->lt(now()->subMinutes(\App\Services\Registro::MARGINE_MINUTI)));
+    // Negli orari dell'attivita' pianificata (lun-ven, controlli dalle 8:00 alle 20:00) il PC controlla ogni 5 minuti:
+    // oltre 15 minuti di silenzio c'e' qualcosa che non va. Dopo le 20:15 e prima delle 8:15 il silenzio e' normale.
+    $fermo = \App\Services\Registro::inOrario(now()) && (! $ultimo || $ultimo->lt(now()->subMinutes(\App\Services\Registro::MARGINE_MINUTI)));
     $mailDaLeggere = \App\Models\MailRegistro::whereNull('vista_at')->count();
     $ultimoRegistrato = \App\Models\Controllo::orderByDesc('inizio')->first();
     $nonQuadra = $ultimoRegistrato && $ultimoRegistrato->quadra !== true;

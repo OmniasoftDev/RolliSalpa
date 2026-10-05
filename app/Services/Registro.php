@@ -25,6 +25,18 @@ class Registro
     /** Minuti tra un controllo e l'altro: un'ora senza controlli dopo questo margine e' "mancante". */
     public const MARGINE_MINUTI = 15;
 
+    /**
+     * Il PC dovrebbe aver appena controllato? Lun-ven tra il primo controllo delle 8:00 e l'ultimo delle 20:00,
+     * piu' il margine: fuori da qui (sera, notte, fine settimana) il silenzio e' normale, non un "fermo".
+     */
+    public static function inOrario(\Carbon\CarbonInterface $t): bool
+    {
+        $primo = $t->copy()->setTimeFromTimeString(self::ORARI[0])->addMinutes(self::MARGINE_MINUTI);
+        $ultimo = $t->copy()->setTimeFromTimeString(end(self::ORARI))->addMinutes(self::MARGINE_MINUTI);
+
+        return $t->isWeekday() && $t->gte($primo) && $t->lte($ultimo);
+    }
+
     public static function impronta(array $codici): string
     {
         $codici = array_values(array_unique(array_map('strval', $codici)));
@@ -178,7 +190,7 @@ class Registro
             $problemi[] = 'Ore senza nessun controllo negli ultimi 7 giorni lavorativi ('.$mancanti->count().'): '.$mancanti->take(8)->join(', ')
                 .($mancanti->count() > 8 ? '…' : '').'. PC spento o attività pianificata ferma: le mail di quelle ore sono state lette al controllo successivo.';
         }
-        if ($ultimo->inizio->lt($adesso->copy()->subMinutes(self::MARGINE_MINUTI)) && $adesso->isWeekday() && $adesso->hour >= 8 && $adesso->hour < 21) {
+        if ($ultimo->inizio->lt($adesso->copy()->subMinutes(self::MARGINE_MINUTI)) && self::inOrario($adesso)) {
             $problemi[] = 'Nessun controllo da '.$ultimo->inizio->diffForHumans($adesso, true).' (ultimo '.$ultimo->inizio->format('d/m H:i').'): il sito non è aggiornato. PC spento o Outlook chiuso?';
         }
         if ($ultimo->quadra === false) {
