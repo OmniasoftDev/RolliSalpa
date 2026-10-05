@@ -32,7 +32,7 @@ class Registro
     public static function inOrario(\Carbon\CarbonInterface $t): bool
     {
         $primo = $t->copy()->setTimeFromTimeString(self::ORARI[0])->addMinutes(self::MARGINE_MINUTI);
-        $ultimo = $t->copy()->setTimeFromTimeString(end(self::ORARI))->addMinutes(self::MARGINE_MINUTI);
+        $ultimo = $t->copy()->setTimeFromTimeString(self::ORARI[count(self::ORARI) - 1])->addMinutes(self::MARGINE_MINUTI);
 
         return $t->isWeekday() && $t->gte($primo) && $t->lte($ultimo);
     }
