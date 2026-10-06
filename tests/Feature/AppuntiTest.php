@@ -83,10 +83,25 @@ class AppuntiTest extends TestCase
         $this->assertSame(0, Appunto::count());
     }
 
+    public function test_il_pc_cancella_anche_un_appunto_elaborato(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post('/rolli/appunti', ['tipo' => 'nota', 'testo' => 'prova', 'allegati' => [UploadedFile::fake()->image('p.jpg')]], ['Accept' => 'application/json'])
+            ->assertOk();
+        $a = Appunto::with('allegati')->firstOrFail();
+        $a->update(['elaborato_at' => now()]);
+        $this->deleteJson('/appunti/'.$a->id)->assertStatus(422);
+
+        $this->withToken(self::TOKEN)->deleteJson('/api/appunti/'.$a->id)->assertOk();
+        $this->assertSame(0, Appunto::count());
+        Storage::disk('local')->assertMissing($a->allegati[0]->percorso);
+    }
+
     public function test_api_appunti_e_allegati_richiedono_il_token(): void
     {
         $this->getJson('/api/appunti')->assertStatus(401);
         $this->postJson('/api/appunti/elaborati', ['id' => [1]])->assertStatus(401);
+        $this->deleteJson('/api/appunti/1')->assertStatus(401);
         $this->get('/allegati/1')->assertRedirect('/login');
     }
 }

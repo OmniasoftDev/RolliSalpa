@@ -15,5 +15,6 @@ Route::middleware([TokenSincronizzazione::class, 'throttle:120,1'])->group(funct
     Route::post('/controlli', [RegistroController::class, 'registra']);
     Route::get('/appunti', [AppuntiController::class, 'index']);
     Route::post('/appunti/elaborati', [AppuntiController::class, 'elaborati']);
+    Route::delete('/appunti/{appunto}', [AppuntiController::class, 'cancella']);
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file']);
 });

@@ -52,4 +52,15 @@ class AppuntiController extends Controller
 
         return response()->json(['ok' => true, 'elaborati' => $n]);
     }
+
+    /** DELETE /api/appunti/{id} — dal PC, anche se elaborato: per gli appunti di prova (il sito blocca gli elaborati). */
+    public function cancella(Appunto $appunto): JsonResponse
+    {
+        foreach ($appunto->allegati as $a) {
+            Storage::disk('local')->delete($a->percorso);
+        }
+        $appunto->delete();
+
+        return response()->json(['ok' => true]);
+    }
 }
