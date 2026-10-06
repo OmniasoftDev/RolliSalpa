@@ -66,7 +66,8 @@ class AppuntiTest extends TestCase
         foreach (['/rolli/lavoro', '/rolli/workflow', '/rolli/compiti'] as $pagina) {
             $this->get($pagina)->assertOk()->assertSee('/rolli?appunto', false)->assertSee('+ Appunto');
         }
-        $this->get('/rolli')->assertOk()->assertSee('class="nuovo-appunto" data-apri-appunto=""', false);
+        // sul Quadro il link apre il modulo senza ricaricare
+        $this->assertMatchesRegularExpression('/class="nuovo-appunto"\s+data-apri-appunto=""/', $this->get('/rolli')->assertOk()->getContent());
     }
 
     public function test_validazione_e_cancellazione(): void
