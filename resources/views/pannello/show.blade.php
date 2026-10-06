@@ -201,7 +201,8 @@
         r.addEventListener('click', () => scegli(r.dataset.m, true));
         r.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); scegli(r.dataset.m, true); } });
     });
-    const sel = leggi('-sel');
+    // ?m=m01 (dai link del Workflow) vince sull'ultima macchina scelta
+    const sel = new URLSearchParams(location.search).get('m') || leggi('-sel');
     if (sel && document.getElementById('d-' + sel)) scegli(sel, false);
 
     const filtra = f => {

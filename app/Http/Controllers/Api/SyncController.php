@@ -54,6 +54,21 @@ class SyncController extends Controller
         }
         Cache::forever('stato_pc', $campi + ['escluse' => $escluse, 'ricevuto' => now()->format('Y-m-d H:i')]);
 
+        // eventi del calendario Google Salpa-Rolli, letti dal PC con l'indirizzo iCal (pagina Workflow):
+        // {"letto": "2026-10-06 10:05", "eventi": [{progetto, uid, titolo, inizio, fine, luogo, descrizione, tuttoIlGiorno}]}
+        $calendario = $request->input('calendario');
+        if (is_array($calendario) && is_array($calendario['eventi'] ?? null)) {
+            $eventi = [];
+            foreach (array_slice($calendario['eventi'], 0, 500) as $g) {
+                if (! is_array($g) || ! in_array($g['progetto'] ?? null, ['salpa', 'rolli'], true) || ! is_string($g['inizio'] ?? null)) {
+                    continue;
+                }
+                $eventi[] = collect($g)->only(['progetto', 'uid', 'titolo', 'inizio', 'fine', 'luogo', 'descrizione'])
+                    ->map(fn ($v) => mb_substr((string) $v, 0, 1000))->all() + ['tuttoIlGiorno' => (bool) ($g['tuttoIlGiorno'] ?? false)];
+            }
+            Cache::forever('calendario_google', ['letto' => mb_substr((string) ($calendario['letto'] ?? now()->format('Y-m-d H:i')), 0, 20), 'eventi' => $eventi]);
+        }
+
         return response()->json(['ok' => true]);
     }
 

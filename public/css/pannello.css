@@ -266,3 +266,69 @@ details.card summary { cursor: pointer }
 .bozza-risultato[hidden] { display: none }
 .bozza-form .azioni { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
 a.btn { text-decoration: none; display: inline-block }
+/* Workflow */
+.workflow-pagina [hidden] { display: none !important }
+.wf-barra { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center }
+.wf-tipi { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem }
+.wf-tipi label { cursor: pointer; display: inline-flex; align-items: center; gap: 4px }
+.wf-pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--wf-c) }
+.wf-fase { --wf-c: var(--run); --wf-bg: var(--run-bg) }
+.wf-appuntamento { --wf-c: var(--accent); --wf-bg: color-mix(in srgb, var(--accent) 14%, var(--panel)) }
+.wf-google { --wf-c: var(--ok); --wf-bg: var(--ok-bg) }
+.wf-scadenza { --wf-c: var(--wait); --wf-bg: var(--wait-bg) }
+.wf-mail { --wf-c: var(--muted); --wf-bg: var(--off-bg) }
+.st-scaduto, .st-rischio { --wf-c: var(--risk); --wf-bg: var(--risk-bg) }
+.wf-fase.st-fatto, .wf-barra-fase.st-fatto { --wf-c: var(--ok); --wf-bg: var(--ok-bg) }
+.wf-griglia { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start }
+@media (max-width: 900px) { .wf-griglia { grid-template-columns: minmax(0, 1fr) } }
+.wf-dettagli { position: sticky; top: 12px }
+.wf-dett { display: grid; gap: 8px }
+.wf-dett h3 { font-size: 1.15rem; overflow-wrap: anywhere }
+.wf-dett p { margin: 0 }
+.wf-dett .meta { display: flex; gap: 6px; align-items: center }
+.wf-testo { white-space: pre-line; font-size: .9rem; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto }
+.wf-mese-testa { display: flex; align-items: center; gap: 10px }
+.wf-mese-testa .btn { width: auto; padding: 2px 12px; font-size: 1.1rem }
+.wf-mese-testa h2 { min-width: 10ch; text-align: center; color: var(--ink) }
+.wf-mese { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden }
+.wf-intestazione, .wf-giorni, .wf-barre { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) }
+.wf-intestazione span { font: 600 .72rem var(--f-display); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 6px; text-align: center; border-bottom: 1px solid var(--line) }
+.wf-settimana { border-bottom: 1px solid var(--line) }
+.wf-settimana:last-child { border-bottom: 0 }
+.wf-barre { gap: 2px 0; padding: 4px 0 0 }
+.wf-barra-fase { text-align: left; font: 600 .76rem var(--f-body); background: var(--wf-bg); color: var(--ink); border: 1px solid var(--wf-c); border-left-width: 3px; border-radius: 3px; padding: 1px 6px; margin: 0 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.wf-barra-fase.st-previsto { border-style: dashed; border-left-style: solid }
+.wf-giorno { min-height: 92px; padding: 4px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.wf-giorno:last-child { border-right: 0 }
+.wf-giorno.festivo { background: var(--off-bg) }
+.wf-giorno.fuori .wf-data { opacity: .45 }
+.wf-giorno.oggi { box-shadow: inset 0 0 0 2px var(--accent) }
+.wf-data { font: 600 .8rem var(--f-mono); color: var(--muted) }
+.wf-gs { display: none }
+.wf-giorno.oggi .wf-data { color: var(--accent) }
+.wf-voce { text-align: left; font: .76rem/1.25 var(--f-body); color: var(--ink); background: var(--wf-bg); border: 0; border-left: 3px solid var(--wf-c); border-radius: 3px; padding: 2px 5px; cursor: pointer; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere }
+.wf-voce.st-proposto { border-left-style: dashed }
+.wf-voce.sel, .wf-barra-fase.sel, .wf-fase.sel { outline: 2px solid var(--ink); outline-offset: 1px }
+.wf-voce:focus-visible, .wf-barra-fase:focus-visible, .wf-fase:focus-visible, .wf-punto:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+@media (max-width: 700px) {
+  .wf-intestazione { display: none }
+  .wf-giorni, .wf-barre { display: block }
+  .wf-barra-fase { display: block; width: calc(100% - 4px); margin: 2px }
+  .wf-giorno { min-height: 0; border-right: 0; border-top: 1px solid var(--line) }
+  .wf-giorno.vuoto:not(.oggi) { display: none }
+  .wf-gs { display: inline }
+  .wf-voce { -webkit-line-clamp: 3; font-size: .85rem }
+}
+.wf-timeline { display: grid; gap: 0; overflow-x: auto }
+.wf-riga { display: grid; grid-template-columns: 190px minmax(560px, 1fr); border-bottom: 1px solid var(--line); min-height: 34px }
+.wf-nome { font-size: .85rem; padding: 6px 8px 6px 0; overflow-wrap: anywhere }
+.wf-nome a { text-decoration: none; color: var(--ink) }
+.wf-pista { --corsia: 22px; position: relative; min-height: calc(var(--corsie, 1) * var(--corsia) + 22px) }
+.wf-testa-tl .wf-pista { min-height: 24px }
+.wf-sett { position: absolute; top: 4px; font: 500 .68rem var(--f-mono); color: var(--muted); border-left: 1px solid var(--line); padding-left: 3px; white-space: nowrap; overflow: hidden }
+.wf-fase { position: absolute; margin-top: 4px; height: calc(var(--corsia) - 4px); font: 600 .72rem var(--f-body); text-align: left; color: var(--ink); background: var(--wf-bg); border: 1px solid var(--wf-c); border-left-width: 3px; border-radius: 3px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer }
+.wf-fase.st-previsto { border-style: dashed; border-left-style: solid }
+.wf-punto { position: absolute; bottom: 4px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--wf-c); border: 2px solid var(--panel); padding: 0; cursor: pointer }
+.wf-punto.sel { outline: 2px solid var(--ink) }
+.wf-oggi, .wf-fine { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--accent); pointer-events: none }
+.wf-fine { border-left-color: var(--risk) }
