@@ -16,12 +16,13 @@ Pannello web dei progetti Industria 4.0 **Salpa** e **Rolli** seguiti da Omniaso
 - Lo SCADA Omniasoft per Rolli (da AbruzzoResineNew) **non** va in questa app.
 
 ## Struttura
-- `app/Services/Sincronizzazione.php` — applica un file di progetto al DB (transazione unica).
-- `app/Http/Controllers/Api/SyncController.php` — `/api/sync`, `/api/spunte`, protetti da `TokenSincronizzazione` (Bearer = `PANNELLO_SYNC_TOKEN`).
-- `app/Http/Controllers/PannelloController.php` — `/` (primo progetto), `/{slug}`, `POST /domande/{id}` (spunta).
-- Tabelle: `projects` (info e fasi in JSON), `machines` (dati in JSON), `questions`, `events`. SQL per phpMyAdmin in `database/schema-iniziale.sql`, allineato alle migration.
-- Viste: `resources/views/pannello/show.blade.php`; CSS in `public/css/pannello.css` (niente build npm).
-- Test in `tests/Feature/PannelloTest.php`, eseguiti dalla GitHub Action prima del deploy.
+- `app/Services/Sincronizzazione.php` — applica un file di progetto al DB (transazione unica); il `planning` finisce in `projects.info.planning`.
+- `app/Http/Controllers/Api/` — `SyncController` (`/api/sync`, `/api/spunte`, `/api/stato` con mail escluse e calendario Google in cache), `RegistroController` (`/api/controlli`), `AppuntiController` (`/api/appunti`, `/api/allegati`); tutte protette da `TokenSincronizzazione` (Bearer = `PANNELLO_SYNC_TOKEN`).
+- `app/Http/Controllers/` — `PannelloController` (quadro, spunte, decisioni, "Visto"), `LavoroController` (Il mio lavoro, bozze, appuntamenti), `WorkflowController` (Workflow), `CompitiController`, `ChatController`, `AppuntiController`, `RegistroController`, `Auth/LoginController`.
+- `app/Services/` — `LavoroFrancesco` (area di Francesco e calendario proposto), `Workflow` (voci di calendario e timeline), `BozzaMail` e `ChatClaude` (API Anthropic), `Registro` (quadratura e griglia dei controlli).
+- Tabelle: `projects` (info, fasi e planning in JSON), `machines` (dati in JSON), `questions`, `events`, `decisioni`, `persone`, `compiti`, `appuntamenti`, `appunti`, `appunti_allegati`, `chat_messaggi`, `controlli`, `mail_registro`. SQL per phpMyAdmin in `database/schema-iniziale.sql` e `database/sql/` (vedi `DEPLOY.md`), allineato alle migration. Cache (`file`): `stato_pc`, `calendario_google`.
+- Viste in `resources/views/` (`pannello`, `lavoro`, `workflow`, `compiti`, `chat`, `registro`, `layouts/app` con il menu); CSS in `public/css/pannello.css`, JS degli appunti in `public/js/appunti.js` (niente build npm).
+- Test in `tests/Feature/` (uno per pagina: Pannello, DaGuardare, Lavoro, Workflow, Compiti, Chat, Appunti, Registro), eseguiti dalla GitHub Action prima del deploy.
 
 ## Formato di pannello/<slug>.json
 ```json
