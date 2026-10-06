@@ -54,8 +54,10 @@ class AppuntiController extends Controller
     }
 
     /** DELETE /api/appunti/{id} — dal PC, anche se elaborato: per gli appunti di prova (il sito blocca gli elaborati). */
-    public function cancella(Appunto $appunto): JsonResponse
+    public function cancella(int $id): JsonResponse
     {
+        // id e non binding del modello: il token si controlla prima di cercare l'appunto (401, non 404)
+        $appunto = Appunto::findOrFail($id);
         foreach ($appunto->allegati as $a) {
             Storage::disk('local')->delete($a->percorso);
         }
