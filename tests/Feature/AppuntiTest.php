@@ -60,6 +60,15 @@ class AppuntiTest extends TestCase
         $this->deleteJson('/appunti/'.$a->id)->assertStatus(422);
     }
 
+    public function test_appunto_dal_menu_di_ogni_pagina(): void
+    {
+        $this->actingAs(User::factory()->create());
+        foreach (['/rolli/lavoro', '/rolli/workflow', '/rolli/compiti'] as $pagina) {
+            $this->get($pagina)->assertOk()->assertSee('/rolli?appunto', false)->assertSee('+ Appunto');
+        }
+        $this->get('/rolli')->assertOk()->assertSee('class="nuovo-appunto" data-apri-appunto=""', false);
+    }
+
     public function test_validazione_e_cancellazione(): void
     {
         $this->actingAs(User::factory()->create());

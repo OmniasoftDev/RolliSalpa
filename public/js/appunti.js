@@ -28,8 +28,16 @@
     };
     document.addEventListener('click', e => {
         const b = e.target.closest('[data-apri-appunto]');
+        if (b && b.tagName === 'A') e.preventDefault();
         if (b) apriAppunto({ macchina: b.dataset.apriAppunto, tipo: b.dataset.tipo || '', testoIniziale: b.dataset.testo || '' });
     });
+    // "+ Appunto" del menu dalle altre pagine arriva qui con ?appunto (o ?appunto=<codice macchina>)
+    const daMenu = new URLSearchParams(location.search);
+    if (daMenu.has('appunto')) {
+        apriAppunto({ macchina: daMenu.get('appunto') });
+        daMenu.delete('appunto');
+        history.replaceState(null, '', location.pathname + (daMenu.size ? '?' + daMenu : '') + location.hash);
+    }
     form.querySelector('[data-chiudi-appunto]').addEventListener('click', () => form.hidden = true);
     fileInput.addEventListener('change', () => {
         document.getElementById('file-scelti').replaceChildren(...[...fileInput.files].map(f => {

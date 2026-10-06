@@ -142,6 +142,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 
 /* Menu Quadro / Chat e pagina chat */
 .tabs.sotto a { font-size: .82rem; padding: 3px 10px }
+.tabs.sotto a.nuovo-appunto { background: var(--accent); border-color: var(--accent); color: var(--panel) }
 .chat-pagina { max-width: 860px }
 .chat { display: grid; gap: 10px }
 .msg { display: grid; gap: 6px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line); max-width: 92%; min-width: 0 }

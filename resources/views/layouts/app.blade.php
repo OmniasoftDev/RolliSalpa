@@ -29,6 +29,8 @@
                     <a href="{{ route('workflow', $progetto->slug) }}" @if (request()->routeIs('workflow')) aria-current="page" @endif>Workflow</a>
                     <a href="{{ route('compiti', $progetto->slug) }}" @if (request()->routeIs('compiti')) aria-current="page" @endif>Persone e compiti</a>
                     <a href="{{ route('chat', $progetto->slug) }}" @if (request()->routeIs('chat')) aria-current="page" @endif>Chat con Claude</a>
+                    {{-- Dal telefono, da qualunque pagina: apre il Quadro con il modulo "Nuovo appunto" gia' aperto (sul Quadro lo apre senza ricaricare) --}}
+                    <a href="{{ route('pannello', $progetto->slug) }}?appunto" class="nuovo-appunto" @if (request()->routeIs('pannello')) data-apri-appunto="" @endif>+ Appunto</a>
                 </div>
             @endisset
         @endisset
