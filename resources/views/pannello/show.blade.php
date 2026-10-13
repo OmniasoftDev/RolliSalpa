@@ -108,7 +108,10 @@
                         <h3><span class="num">{{ $m->dato('num', $m->codice) }}</span>{{ $m->dato('nome') }}</h3>
                         @if ($m->dato('aggiornato'))<span class="src">Scheda aggiornata il {{ \Illuminate\Support\Carbon::parse($m->dato('aggiornato'))->format('d/m/Y') }}</span>@endif
                     </div>
-                    <div class="azioni"><button type="button" class="btn btn-sec" data-apri-appunto="{{ $m->codice }}">+ Appunto su questa macchina</button></div>
+                    <div class="azioni">
+                        <a class="btn" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}">Progetto 4.0 e mappa</a>
+                        <button type="button" class="btn btn-sec" data-apri-appunto="{{ $m->codice }}">+ Appunto su questa macchina</button>
+                    </div>
                     @if ($m->dato('prossimo'))<div class="next"><b>Prossimo passo</b>{{ $m->dato('prossimo') }}</div>@endif
                     <div class="phases">@foreach ($fasi as $f)<div class="phase">{!! $lamp($m->fase($f[0])) !!}{{ $f[1] }}</div>@endforeach</div>
                     @if ($kv->isNotEmpty())

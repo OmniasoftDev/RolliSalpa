@@ -6,6 +6,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CompitiController;
 use App\Http\Controllers\LavoroController;
 use App\Http\Controllers\PannelloController;
+use App\Http\Controllers\ProgettiController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/appunti/{appunto}', [AppuntiController::class, 'destroy'])->name('appunti.destroy');
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file'])->name('allegati.file');
     Route::get('/{slug}/workflow', [WorkflowController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('workflow');
+    Route::get('/{slug}/progetti', [ProgettiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('progetti');
+    Route::get('/{slug}/progetti/{codice}', [ProgettiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('progetti.show');
     Route::get('/registro', [RegistroController::class, 'show'])->name('registro');
     Route::post('/mail/viste', [RegistroController::class, 'tutteViste'])->name('mail.viste');
     Route::post('/mail/{mail}/vista', [RegistroController::class, 'vista'])->name('mail.vista');
