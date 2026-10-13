@@ -145,10 +145,10 @@
             </section>
         @endif
 
-        <div class="pj-due">
-            {{-- Chi fa cosa --}}
-            <section class="card" aria-labelledby="t-attori">
-                <h2 id="t-attori">Chi fa cosa</h2>
+        {{-- Chi fa cosa: a tutta larghezza, schede affiancate --}}
+        <section class="card" aria-labelledby="t-attori">
+            <h2 id="t-attori">Chi fa cosa <span class="conta">{{ $attori->count() }}</span></h2>
+            <div class="pj-attori">
                 @forelse ($attori as $a)
                     <div class="pj-attore st-{{ $st($a['stato'] ?? null) }}">
                         <div class="pj-attore-testa"><span class="pj-ruolo">{{ $a['ruolo'] ?? '' }}</span>{!! $lamp($a['stato'] ?? null) !!}</div>
@@ -165,9 +165,10 @@
                 @empty
                     <p class="empty">Da definire.</p>
                 @endforelse
-            </section>
+            </div>
+        </section>
 
-            {{-- Anagrafica --}}
+        {{-- Anagrafica, a tutta larghezza --}}
             <section class="card" aria-labelledby="t-anagrafica">
                 <h2 id="t-anagrafica">La macchina</h2>
                 @if ($p['anagrafica'])
@@ -182,7 +183,6 @@
                     </div>
                 @endif
             </section>
-        </div>
 
         {{-- Dati in uscita e in ingresso --}}
         <div class="pj-due">

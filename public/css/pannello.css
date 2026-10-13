@@ -437,3 +437,4 @@ a.btn { text-decoration: none; display: inline-block }
 .pj-check li { font-size: .92rem; display: flex; gap: 8px; align-items: baseline }
 .pj-check li.fatto { color: var(--muted) }
 .progetto-pagina .azioni .btn { width: auto; text-decoration: none }
+.pj-attori { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; align-items: start }
