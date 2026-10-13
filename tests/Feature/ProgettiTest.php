@@ -62,7 +62,10 @@ class ProgettiTest extends TestCase
         ]);
         app(Sincronizzazione::class)->applica([
             'progetto' => 'rolli', 'nome' => 'Rolli', 'ordine' => 2, 'eventi' => [],
-            'macchine' => [['codice' => 'r01', 'num' => '01', 'nome' => 'Imbustatrice Rolli', 'progetto' => ['sintesi' => 'Solo Rolli']]],
+            'macchine' => [
+                ['codice' => 'r00', 'num' => '—', 'nome' => 'Domande generali per il preventivo', 'escludiDaiConteggi' => true],
+                ['codice' => 'r01', 'num' => '01', 'nome' => 'Imbustatrice Rolli', 'progetto' => ['sintesi' => 'Solo Rolli']],
+            ],
         ]);
     }
 
@@ -105,7 +108,9 @@ class ProgettiTest extends TestCase
         $this->get('/salpa/progetti/m01')->assertOk()->assertSee('non è ancora impostato');
         // le macchine di Rolli non si aprono da Salpa
         $this->get('/salpa/progetti/r01')->assertNotFound();
-        $this->get('/rolli/progetti/r01')->assertOk()->assertSee('Solo Rolli')->assertDontSee('Rulliera cella');
+        $this->get('/rolli/progetti/r01')->assertOk()->assertSee('Solo Rolli')->assertDontSee('Rulliera cella')->assertDontSee('Domande generali');
+        // le domande generali non sono una macchina: non compaiono tra i progetti
+        $this->get('/rolli/progetti')->assertOk()->assertSee('Imbustatrice Rolli')->assertDontSee('Domande generali')->assertSee('1/1');
     }
 
     public function test_disposizione_della_mappa(): void

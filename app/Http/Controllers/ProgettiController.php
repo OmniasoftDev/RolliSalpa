@@ -19,7 +19,8 @@ class ProgettiController extends Controller
         $progetto = Project::where('slug', $slug)->firstOrFail();
         $requisiti = $mappa->requisiti($progetto->info ?? []);
 
-        $schede = $progetto->machines->map(function ($m) use ($mappa, $requisiti) {
+        // le voci escluse dai conteggi (es. r00 "Domande generali" di Rolli) non sono macchine
+        $schede = $progetto->machines->reject(fn ($m) => $m->dato('escludiDaiConteggi'))->values()->map(function ($m) use ($mappa, $requisiti) {
             $p = $mappa->progetto($m);
 
             return ['macchina' => $m, 'p' => $p, 'avanzamento' => $mappa->avanzamento($p), 'copertura' => $mappa->copertura($p, $requisiti)];
@@ -45,7 +46,7 @@ class ProgettiController extends Controller
             'progetto' => $progetto,
             'progetti' => Project::orderBy('ordine')->get(['slug', 'nome']),
             'macchina' => $macchina,
-            'macchine' => $progetto->machines,
+            'macchine' => $progetto->machines->reject(fn ($m) => $m->dato('escludiDaiConteggi'))->values(),
             'p' => $p,
             'mappa' => $mappa->mappa($p),
             'requisiti' => $requisiti,
