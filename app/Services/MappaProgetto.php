@@ -169,13 +169,15 @@ class MappaProgetto
         $totali = $coppie;
 
         $out = [];
+        $occupati = [];
         foreach ($collegamenti as $num => $c) {
             $k = $c['k'];
             [$da, $a] = [$c['da'], $c['a']];
             $chiave = $da['id'] < $a['id'] ? $da['id'].'|'.$a['id'] : $a['id'].'|'.$da['id'];
             $n = $totali[$chiave] + 1;
-            $scarto = ($c['indice'] - ($n - 1) / 2) * 26;
-            [$d, $lx, $ly] = $this->tracciato($da, $a, $scarto);
+            $scarto = ($c['indice'] - ($n - 1) / 2) * 40;
+            [$d, $punti] = $this->tracciato($da, $a, $scarto);
+            [$lx, $ly] = $this->etichetta($punti, $occupati);
             $out[] = array_merge($k, [
                 'id' => (string) ($k['id'] ?? 'k'.$num),
                 'numero' => $num + 1,
@@ -210,21 +212,62 @@ class MappaProgetto
             $x2 = $destra ? $a['x'] : $a['x'] + $a['w'];
             $y = $da['y'] + $da['h'] / 2 + $scarto * 0.6;
             $alto = $y - 46 - abs($scarto);
-            $mx = ($x1 + $x2) / 2;
             if (abs($x2 - $x1) < 40) { // nodi vicini: arco piu' largo
                 $alto -= 30;
             }
 
-            return [sprintf('M%.0f %.0f C%.0f %.0f %.0f %.0f %.0f %.0f', $x1, $y, $x1 + ($destra ? 30 : -30), $alto, $x2 + ($destra ? -30 : 30), $alto, $x2, $y), $mx, $alto + 12];
+            return $this->curva([$x1, $y], [$x1 + ($destra ? 30 : -30), $alto], [$x2 + ($destra ? -30 : 30), $alto], [$x2, $y]);
         }
 
+        // ogni filo esce dal lato del nodo rivolto verso l'altro: fili diversi non partono dallo stesso punto
         $giu = $a['y'] > $da['y'];
-        $x1 = $cxDa + $scarto;
-        $x2 = $cxA + $scarto;
+        $limite = max(0, $da['w'] / 2 - 18 - abs($scarto));
+        $dx = $cxA - $cxDa;
+        $x1 = $cxDa + max(-$limite, min($limite, $dx * 0.35)) + $scarto;
+        $x2 = $cxA + max(-$limite, min($limite, -$dx * 0.35)) + $scarto;
         $y1 = $giu ? $da['y'] + $da['h'] : $da['y'];
         $y2 = $giu ? $a['y'] : $a['y'] + $a['h'];
         $my = ($y1 + $y2) / 2;
 
-        return [sprintf('M%.0f %.0f C%.0f %.0f %.0f %.0f %.0f %.0f', $x1, $y1, $x1, $my, $x2, $my, $x2, $y2), ($x1 + $x2) / 2, $my];
+        return $this->curva([$x1, $y1], [$x1, $my], [$x2, $my], [$x2, $y2]);
+    }
+
+    /** Curva di Bezier cubica: il tracciato SVG e i suoi quattro punti. */
+    private function curva(array ...$p): array
+    {
+        return [sprintf('M%.0f %.0f C%.0f %.0f %.0f %.0f %.0f %.0f', ...array_merge(...$p)), $p];
+    }
+
+    /**
+     * Posto del tondino col numero: a meta' curva, oppure piu' avanti o indietro sulla stessa
+     * curva se li' c'e' gia' il numero di un altro collegamento (fili che si incrociano).
+     */
+    private function etichetta(array $p, array &$occupati): array
+    {
+        $punto = function (float $t) use ($p) {
+            $u = 1 - $t;
+            $c = [$u ** 3, 3 * $u * $u * $t, 3 * $u * $t * $t, $t ** 3];
+
+            return [$c[0] * $p[0][0] + $c[1] * $p[1][0] + $c[2] * $p[2][0] + $c[3] * $p[3][0],
+                $c[0] * $p[0][1] + $c[1] * $p[1][1] + $c[2] * $p[2][1] + $c[3] * $p[3][1]];
+        };
+        $scelto = $punto(0.5);
+        foreach ([0.5, 0.35, 0.65, 0.25, 0.75, 0.2, 0.8] as $t) {
+            [$x, $y] = $punto($t);
+            $libero = true;
+            foreach ($occupati as [$ox, $oy]) {
+                if (abs($x - $ox) < 28 && abs($y - $oy) < 28) {
+                    $libero = false;
+                    break;
+                }
+            }
+            if ($libero) {
+                $scelto = [$x, $y];
+                break;
+            }
+        }
+        $occupati[] = $scelto;
+
+        return $scelto;
     }
 }

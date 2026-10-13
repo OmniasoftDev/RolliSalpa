@@ -84,6 +84,11 @@
                                 <g class="pj-k st-{{ $k['stato'] }}" tabindex="0" role="button" data-dett="k-{{ $k['id'] }}" data-da="{{ $k['da'] }}" data-a="{{ $k['a'] }}" aria-label="Collegamento {{ $k['numero'] }}: {{ $k['nomeDa'] }} verso {{ $k['nomeA'] }}, {{ $k['titolo'] ?? '' }}">
                                     <path class="pj-filo-tocco" d="{{ $k['path'] }}"/>
                                     <path class="pj-filo" d="{{ $k['path'] }}" marker-end="url(#fr-{{ $k['stato'] }})" @if ($k['entrambi']) marker-start="url(#fr-{{ $k['stato'] }})" @endif/>
+                                </g>
+                            @endforeach
+                            {{-- i numeri dopo tutti i fili: un filo che incrocia non li copre --}}
+                            @foreach ($mappa['collegamenti'] as $k)
+                                <g class="pj-k st-{{ $k['stato'] }}" data-dett="k-{{ $k['id'] }}" data-da="{{ $k['da'] }}" data-a="{{ $k['a'] }}" aria-hidden="true">
                                     <circle cx="{{ $k['lx'] }}" cy="{{ $k['ly'] }}" r="12"/>
                                     <text x="{{ $k['lx'] }}" y="{{ $k['ly'] + 4 }}" text-anchor="middle">{{ $k['numero'] }}</text>
                                 </g>
