@@ -48,6 +48,32 @@ class Project extends Model
         return $this->hasMany(Appuntamento::class)->orderBy('inizio');
     }
 
+    /**
+     * Sistemi del progetto (SCADA, Data Collector, gestionale, rete): campo `sistemi` del file,
+     * salvato in info.sistemi. Ogni voce con tutte le chiavi presenti (elenchi vuoti dove mancano).
+     */
+    public function sistemi(): array
+    {
+        $elenco = fn (array $s, string $k) => array_values(array_filter(is_array($s[$k] ?? null) ? $s[$k] : [], 'is_array'));
+        $sistemi = [];
+        foreach ((array) ($this->info['sistemi'] ?? []) as $s) {
+            if (! is_array($s) || ! is_string($s['codice'] ?? null) || ! preg_match('/^[A-Za-z0-9_-]{1,20}$/', $s['codice'])) {
+                continue;
+            }
+            $voce = ['codice' => $s['codice']];
+            foreach (['nome', 'tipo', 'proprieta', 'gestore', 'sintesi', 'aggiornato'] as $k) {
+                $voce[$k] = is_scalar($s[$k] ?? null) ? (string) $s[$k] : '';
+            }
+            $voce['nome'] = $voce['nome'] !== '' ? $voce['nome'] : $s['codice'];
+            foreach (['anagrafica', 'collegamenti', 'contenuti', 'foto', 'credenziali', 'aperti', 'documenti'] as $k) {
+                $voce[$k] = $elenco($s, $k);
+            }
+            $sistemi[] = $voce;
+        }
+
+        return $sistemi;
+    }
+
     /** Valore di progetto/info, con un default. */
     public function info(string $chiave, mixed $default = null): mixed
     {

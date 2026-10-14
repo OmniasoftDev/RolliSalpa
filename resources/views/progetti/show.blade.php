@@ -51,6 +51,8 @@
         <a class="btn btn-sec" href="{{ route('pannello', $progetto->slug) }}?appunto">+ Appunto</a>
     </div>
 
+    @include('credenziali.blocco', ['oggettoTipo' => 'macchina', 'oggettoCodice' => $macchina->codice])
+
     @unless ($p['impostato'])
         <div class="card"><p class="empty">Il progetto 4.0 di questa macchina non è ancora impostato. Arriva dal PC (campo <span class="mono">progetto</span> della macchina) alla prossima pubblicazione.</p></div>
     @else

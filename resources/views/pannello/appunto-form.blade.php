@@ -1,4 +1,4 @@
-{{-- Nuovo appunto: sopralluogo, riunione, decisione o nota, con foto e PDF. Pensato per il telefono. --}}
+{{-- Nuovo appunto: sopralluogo, riunione, decisione, nota o screenshot, con foto e PDF. Pensato per il telefono. --}}
 <form class="appunto-form" id="appunto-form" data-url="{{ route('appunti.store', $progetto->slug) }}" data-progetto="{{ $progetto->slug }}" hidden>
     <div class="top"><h3>Nuovo appunto · {{ $progetto->nome }}</h3><button type="button" class="esci" data-chiudi-appunto>Chiudi</button></div>
 
@@ -15,6 +15,16 @@
             <label for="am-{{ $m->codice }}"><input type="checkbox" id="am-{{ $m->codice }}" name="macchine[]" value="{{ $m->codice }}"> <span class="num">{{ $m->dato('num', $m->codice) }}</span>{{ $m->dato('nome') }}</label>
         @endforeach
     </fieldset>
+
+    @php $sistemiForm = $progetto->sistemi(); @endphp
+    @if ($sistemiForm)
+        <fieldset class="scelta-macchine">
+            <legend>Sistemi (SCADA, Data Collector, rete: per foto e screenshot)</legend>
+            @foreach ($sistemiForm as $sf)
+                <label for="am-{{ $sf['codice'] }}"><input type="checkbox" id="am-{{ $sf['codice'] }}" name="macchine[]" value="{{ $sf['codice'] }}"> <span class="num">{{ $sf['codice'] }}</span>{{ $sf['nome'] }}</label>
+            @endforeach
+        </fieldset>
+    @endif
 
     <label for="appunto-testo" class="campo">Appunto
         <textarea id="appunto-testo" name="testo" rows="7" placeholder="Cosa hai visto o deciso: chi era presente, cosa ha detto, dati letti in macchina (PLC, targa, IP, protocollo), cosa manca, prossimo passo."></textarea>

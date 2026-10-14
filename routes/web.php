@@ -4,10 +4,12 @@ use App\Http\Controllers\AppuntiController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CompitiController;
+use App\Http\Controllers\CredenzialiController;
 use App\Http\Controllers\LavoroController;
 use App\Http\Controllers\PannelloController;
 use App\Http\Controllers\ProgettiController;
 use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\SistemiController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +40,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/{slug}/workflow', [WorkflowController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('workflow');
     Route::get('/{slug}/progetti', [ProgettiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('progetti');
     Route::get('/{slug}/progetti/{codice}', [ProgettiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('progetti.show');
+    Route::get('/{slug}/sistemi', [SistemiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('sistemi');
+    Route::get('/{slug}/sistemi/{codice}', [SistemiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('sistemi.show');
+    // Cassaforte delle credenziali: risposte JSON, "Mostra" solo con la password confermata da meno di 15 minuti
+    Route::post('/credenziali/conferma', [CredenzialiController::class, 'conferma'])->middleware('throttle:5,1')->name('credenziali.conferma');
+    Route::post('/{slug}/credenziali', [CredenzialiController::class, 'store'])->where('slug', '[a-z0-9-]+')->name('credenziali.store');
+    Route::post('/credenziali/{id}/mostra', [CredenzialiController::class, 'mostra'])->whereNumber('id')->middleware('throttle:30,1')->name('credenziali.mostra');
+    Route::put('/credenziali/{id}', [CredenzialiController::class, 'aggiorna'])->whereNumber('id')->name('credenziali.aggiorna');
+    Route::delete('/credenziali/{id}', [CredenzialiController::class, 'elimina'])->whereNumber('id')->name('credenziali.elimina');
     Route::get('/registro', [RegistroController::class, 'show'])->name('registro');
     Route::post('/mail/viste', [RegistroController::class, 'tutteViste'])->name('mail.viste');
     Route::post('/mail/{mail}/vista', [RegistroController::class, 'vista'])->name('mail.vista');

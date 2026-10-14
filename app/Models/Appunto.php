@@ -13,6 +13,7 @@ class Appunto extends Model
         'riunione' => 'Riunione',
         'decisione' => 'Decisione',
         'nota' => 'Nota',
+        'screenshot' => 'Screenshot',
     ];
 
     protected $table = 'appunti';

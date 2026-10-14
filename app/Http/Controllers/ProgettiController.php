@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Credenziale;
 use App\Models\Project;
 use App\Services\MappaProgetto;
 use Illuminate\View\View;
@@ -55,6 +56,7 @@ class ProgettiController extends Controller
             'persone' => $progetto->persone()->get()->keyBy('codice'),
             'compiti' => $progetto->compiti()->whereIn('stato', ['proposto', 'aperto'])->get()
                 ->filter(fn ($c) => in_array($macchina->codice, $c->macchine ?? [], true)),
+            'credenziali' => Credenziale::perOggetto($progetto, 'macchina', $macchina->codice),
             'storia' => $progetto->events()->limit(300)->get()
                 ->filter(fn ($e) => in_array($macchina->codice, $e->macchine ?? [], true))->take(12),
         ]);

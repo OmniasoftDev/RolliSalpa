@@ -60,6 +60,7 @@ Nuove tabelle o colonne: migration **piu'** SQL equivalente in `database/sql/`, 
 | 02/10/2026 | `database/sql/2026-10-02-registro.sql` | tabelle `controlli` e `mail_registro` (registro dei controlli del PC, quadratura e mail da leggere) | importato 02/10/2026 (Francesco), prima del push |
 | 03/10/2026 | `database/sql/2026-10-03-persone-compiti.sql` | tabelle `persone` e `compiti` (Persone e compiti) | importato 03/10/2026 (Francesco), prima del push |
 | 05/10/2026 | `database/sql/2026-10-05-appuntamenti.sql` | tabella `appuntamenti` (appuntamenti da accettare, poi nel calendario Google Salpa-Rolli) | importato 05/10/2026 (Francesco), prima del push |
+| 14/10/2026 | `database/sql/2026-10-14-credenziali.sql` | tabelle `credenziali` (valori cifrati con APP_KEY) e `credenziali_accessi` (cassaforte delle credenziali di sistemi e macchine) | **da importare (Francesco)**: il codice e' gia' in linea e fino all'import mostra "Cassaforte non ancora attiva" |
 
 Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).
 
@@ -68,4 +69,9 @@ Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul 
 - Serve `ANTHROPIC_API_KEY` nel `.env` del server (chiave da console.anthropic.com). Senza, la pagina Chat dice "non ancora attiva".
 - Modello `claude-opus-5-5`, effort `medium`, fallback lato server attivi (`fallbacks: 'default'`, beta `server-side-fallback-2026-07-01`): se un filtro rifiuta, l'API riprova con un modello adatto.
 - Il 02/10/2026 e' stato aggiunto `anthropic-ai/sdk` a `composer.lock`; `vendor/` ricaricato lo stesso giorno dall'artifact della build. Lo zip di `vendor` (12 MB) e' stato caricato in due parti da File Manager / API `Fileman/upload_files` + estrazione `Fileman::fileop extract`.
-- I dati del progetto (macchine, note con fonte, domande, eventi, appunti) vengono inviati all'API di Anthropic a ogni messaggio.
+- I dati del progetto (macchine, note con fonte, domande, eventi, appunti, sistemi; mai i valori della cassaforte) vengono inviati all'API di Anthropic a ogni messaggio.
+
+## Cassaforte delle credenziali
+
+- I valori sono cifrati con `APP_KEY`: se la chiave del `.env` cambia, le credenziali salvate non si leggono piu'. Tenere una copia di `APP_KEY` al sicuro (fuori dal git).
+- La conferma della password per "Mostra" vale 15 minuti (`auth.password_confirmed_at` in sessione).

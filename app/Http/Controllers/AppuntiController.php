@@ -18,7 +18,8 @@ class AppuntiController extends Controller
     public function store(Request $request, string $slug): JsonResponse
     {
         $progetto = Project::where('slug', $slug)->firstOrFail();
-        $codici = $progetto->machines()->pluck('codice')->all();
+        // macchine e sistemi (s1, s2...: le foto e gli screenshot di SCADA, Data Collector, rete)
+        $codici = array_merge($progetto->machines()->pluck('codice')->all(), array_column($progetto->sistemi(), 'codice'));
 
         $dati = $request->validate([
             'tipo' => ['required', Rule::in(array_keys(Appunto::TIPI))],

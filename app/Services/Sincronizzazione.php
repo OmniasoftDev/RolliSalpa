@@ -39,8 +39,12 @@ class Sincronizzazione
             $progetto = Project::updateOrCreate(['slug' => $slug], [
                 'nome' => (string) ($dati['nome'] ?? ucfirst($slug)),
                 'ordine' => (int) ($dati['ordine'] ?? 0),
-                // il planning (fasi con date per la pagina Workflow) sta in info: nessuna colonna nuova
-                'info' => (is_array($dati['info'] ?? null) ? $dati['info'] : []) + ['planning' => is_array($dati['planning'] ?? null) ? array_values($dati['planning']) : []],
+                // il planning (fasi con date per la pagina Workflow) e i sistemi (SCADA, Data Collector,
+                // gestionale, rete: pagina Sistemi) stanno in info: nessuna colonna nuova
+                'info' => (is_array($dati['info'] ?? null) ? $dati['info'] : []) + [
+                    'planning' => is_array($dati['planning'] ?? null) ? array_values($dati['planning']) : [],
+                    'sistemi' => is_array($dati['sistemi'] ?? null) ? array_values($dati['sistemi']) : [],
+                ],
                 'fasi' => is_array($dati['fasi'] ?? null) ? array_values($dati['fasi']) : [],
                 'synced_at' => now(),
             ]);
