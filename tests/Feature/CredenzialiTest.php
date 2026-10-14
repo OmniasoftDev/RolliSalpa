@@ -37,7 +37,7 @@ class CredenzialiTest extends TestCase
     {
         return $this->postJson('/'.$slug.'/credenziali', $dati + [
             'oggetto_tipo' => 'sistema', 'oggetto_codice' => 's1',
-            'etichetta' => 'Utente SCADA consultazione', 'indirizzo' => '192.168.11.20',
+            'etichetta' => 'Utente PC SCADA Salpa', 'indirizzo' => '192.168.11.20',
             'utente' => 'omniasoft', 'segreto' => self::SEGRETO, 'note' => 'sola lettura, nota riservata', 'fonte' => 'Mail 14/10 Merlotti',
         ])->assertOk()->json('id');
     }
@@ -58,7 +58,7 @@ class CredenzialiTest extends TestCase
         // nella pagina: etichetta, indirizzo e utente mascherato, mai i valori
         $this->get('/salpa/sistemi/s1')->assertOk()
             ->assertSee('Credenziali (1)')
-            ->assertSee('Utente SCADA consultazione')
+            ->assertSee('Utente PC SCADA Salpa')
             ->assertSee('192.168.11.20')
             ->assertSee('o•••••')
             ->assertDontSee(self::SEGRETO)
@@ -121,7 +121,7 @@ class CredenzialiTest extends TestCase
         $this->crea('salpa');
 
         $this->get('/salpa/sistemi/s1')->assertOk()->assertSee('Credenziali (1)')->assertDontSee('Router Rolli WAN');
-        $this->get('/rolli/sistemi/s1')->assertOk()->assertSee('Router Rolli WAN')->assertDontSee('Utente SCADA consultazione');
+        $this->get('/rolli/sistemi/s1')->assertOk()->assertSee('Router Rolli WAN')->assertDontSee('Utente PC SCADA Salpa');
         // una macchina di Rolli non si usa da Salpa
         $this->postJson('/salpa/credenziali', ['oggetto_tipo' => 'macchina', 'oggetto_codice' => 'r01', 'etichetta' => 'x'])->assertStatus(422);
 
