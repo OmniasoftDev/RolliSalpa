@@ -86,10 +86,10 @@ class Certificazione
         $tot = 0;
         $fatto = 0.0;
         foreach ($tappe as $t) {
-            $peso = self::PESI[$t['stato']] ?? 0.0;
-            if ($peso === null) {
+            if (in_array($t['stato'], ['na', 'escluso'], true)) {
                 continue;
             }
+            $peso = self::PESI[$t['stato']] ?? 0.0;
             $tot++;
             $fatto += $peso;
         }
