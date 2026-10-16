@@ -70,8 +70,6 @@ class MiglioramentiScadaTest extends TestCase
         $this->get('/salpa/requisiti')->assertRedirect('/login');
 
         $r = $this->actingAs(User::factory()->create())->get('/salpa/requisiti')->assertOk();
-        preg_match_all('/<td class="rq-tot[^"]*">([^<]*)<\/td>/', $r->getContent(), $tot);
-        fwrite(STDERR, "\nDEBUG rq-tot: ".implode(' | ', $tot[1])."\n");
         $r->assertSee('Requisiti R1–R13 · Salpa')
             ->assertSee('Separatore NH3')->assertSee('Imbustatrice COMEK')->assertDontSee('Domande generali')
             ->assertSee('rq-cella s-ok', false)->assertSee('rq-cella s-na', false)->assertSee('rq-cella s-rischio', false)
@@ -79,13 +77,14 @@ class MiglioramentiScadaTest extends TestCase
             ->assertSee('/salpa/schermate/m05/nh3-05.jpg', false)
             ->assertSee('AlarmWorX64, 20 allarmi')
             ->assertSee('📎')
-            // R12 e R13: 0 macchine ok su 2 applicabili → i piu' scoperti
+            // 3 macchine contate (05, 07 senza requisiti = tutti "manca", 09).
+            // R12 e R13: 0 macchine ok su 3 applicabili → i piu' scoperti
             ->assertSee('Più scoperti:</b> R12 e R13: 0 macchine ok', false)
-            ->assertSee('0/2')
-            // R2 non applicabile per la 05: 1 ok su 1 applicabile
-            ->assertSee('1/1')
-            // 05: ok R1, R9 su 12 applicabili → 17%; 09: 11 ok su 13 → 85%
-            ->assertSee('17%')->assertSee('85%')
+            ->assertSee('<td class="rq-tot rq-zero">0/3</td>', false)
+            // R2 non applicabile per la 05: 1 ok (09) su 2 applicabili (07, 09)
+            ->assertSee('<td class="rq-tot ">1/2</td>', false)
+            // 05: ok R1, R9 su 12 applicabili → 17%; 09: 11 ok su 13 → 85%; 07: 0%
+            ->assertSee('17%')->assertSee('85%')->assertSee('0%')
             ->assertSee(route('progetti.show', ['salpa', 'm05']), false);
     }
 
