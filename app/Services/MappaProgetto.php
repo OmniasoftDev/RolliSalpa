@@ -26,15 +26,44 @@ class MappaProgetto
         'escluso' => ['×', 'Fuori perimetro'],
     ];
 
-    /** Livelli della mappa, dall'alto. */
+    /** Livelli della mappa, dall'alto (16/10/2026: aggiunti Data Collector e rete). */
     public const LIVELLI = [
         0 => 'Gestionale e logistica',
-        1 => 'Supervisione (SCADA, cloud)',
-        2 => 'Controllo macchina (PLC, HMI)',
-        3 => 'Campo e persone',
+        1 => 'Data Collector',
+        2 => 'Supervisione (SCADA, storico, cloud)',
+        3 => 'Rete (router, eWON, NAT)',
+        4 => 'Controllo macchina (PLC, HMI, dispositivi)',
+        5 => 'Campo e persone',
     ];
 
-    private const LIVELLO_TIPO = ['gestionale' => 0, 'scada' => 1, 'cloud' => 1, 'plc' => 2, 'hmi' => 2, 'macchina' => 3, 'sensore' => 3, 'persona' => 3];
+    private const LIVELLO_TIPO = [
+        'gestionale' => 0, 'datacollector' => 1, 'scada' => 2, 'storico' => 2, 'cloud' => 2, 'rete' => 3,
+        'plc' => 4, 'hmi' => 4, 'dispositivo' => 4, 'macchina' => 5, 'sensore' => 5, 'persona' => 5,
+    ];
+
+    /** `"livello": n` numerico nei file e' nella vecchia scala a 4 livelli (0 gestionale … 3 campo). */
+    private const LIVELLO_VECCHIO = [0 => 0, 1 => 2, 2 => 4, 3 => 5];
+
+    /** Nome breve del tipo di nodo, per il riquadro della mappa. */
+    public const TIPI = [
+        'gestionale' => 'Gestionale', 'datacollector' => 'Data Collector', 'scada' => 'SCADA', 'storico' => 'Storico',
+        'cloud' => 'Cloud', 'rete' => 'Rete', 'plc' => 'PLC', 'hmi' => 'HMI', 'dispositivo' => 'Dispositivo',
+        'macchina' => 'Macchina', 'sensore' => 'Sensore', 'persona' => 'Persona',
+    ];
+
+    /** Cosa vuol dire il colore di una freccia (legenda della mappa, Francesco 16/10/2026). */
+    public const LEGENDA_FILI = [
+        'ok' => 'i dati passano davvero',
+        'corso' => 'collegato, ma senza dati utili',
+        'attesa' => 'preparato, ma vuoto',
+        'rischio' => 'non risponde',
+        'no' => 'manca',
+        'verificare' => 'da verificare',
+        'na' => 'non applicabile / fuori perimetro',
+    ];
+
+    /** Viste della mappa: com'e' oggi (visto sullo SCADA) e l'obiettivo 4.0. */
+    public const VISTE = ['oggi' => 'Oggi', 'obiettivo' => 'Obiettivo 4.0'];
 
     /** Requisiti dell'Ing. Romano (verbale riunione 30/09/2026), se il file non li porta in info.requisiti. */
     public const REQUISITI = [
@@ -78,7 +107,59 @@ class MappaProgetto
             'aperti' => $elenco('aperti'),
             'avanzamento' => $elenco('avanzamento'),
             'documenti' => $elenco('documenti'),
+            'oggi' => $this->oggi($p['oggi'] ?? null),
         ];
+    }
+
+    /** La vista "Oggi" (`progetto.oggi`), o null se manca o non ha nodi. */
+    private function oggi(mixed $o): ?array
+    {
+        if (! is_array($o)) {
+            return null;
+        }
+        $elenco = fn ($k) => array_values(array_filter(is_array($o[$k] ?? null) ? $o[$k] : [], 'is_array'));
+        $nodi = $elenco('nodi');
+
+        return $nodi === [] ? null : [
+            'aggiornato' => is_string($o['aggiornato'] ?? null) ? $o['aggiornato'] : null,
+            'fonte' => is_string($o['fonte'] ?? null) ? $o['fonte'] : null,
+            'nodi' => $nodi,
+            'collegamenti' => $elenco('collegamenti'),
+        ];
+    }
+
+    /** La vista richiesta, valida rispetto ai dati: "oggi" solo se c'e', di default "oggi" se c'e'. */
+    public function vista(array $progetto, ?string $chiesta): string
+    {
+        if ($chiesta === 'obiettivo' || $progetto['oggi'] === null) {
+            return 'obiettivo';
+        }
+
+        return 'oggi';
+    }
+
+    /** Nodi e collegamenti della vista. */
+    public function grafo(array $progetto, string $vista): array
+    {
+        if ($vista === 'oggi' && $progetto['oggi'] !== null) {
+            return ['nodi' => $progetto['oggi']['nodi'], 'collegamenti' => $progetto['oggi']['collegamenti']];
+        }
+
+        return ['nodi' => $progetto['nodi'], 'collegamenti' => $progetto['collegamenti']];
+    }
+
+    /** Livello di un nodo: forzato con `livello` (numero nella vecchia scala, o nome di un tipo), altrimenti dal tipo. */
+    public static function livello(array $n): int
+    {
+        $l = $n['livello'] ?? null;
+        if (is_numeric($l)) {
+            return self::LIVELLO_VECCHIO[max(0, min(3, (int) $l))];
+        }
+        if (is_string($l) && isset(self::LIVELLO_TIPO[$l])) {
+            return self::LIVELLO_TIPO[$l];
+        }
+
+        return self::LIVELLO_TIPO[$n['tipo'] ?? ''] ?? 4;
     }
 
     /** Requisiti del progetto: da info.requisiti ([["R1","nome"],...] o {"R1":"nome"}) o quelli del verbale. */
@@ -128,11 +209,10 @@ class MappaProgetto
         $nodi = [];
         foreach ($progetto['nodi'] as $i => $n) {
             $id = (string) ($n['id'] ?? 'n'.$i);
-            $livello = isset($n['livello']) && is_numeric($n['livello']) ? max(0, min(3, (int) $n['livello'])) : (self::LIVELLO_TIPO[$n['tipo'] ?? ''] ?? 2);
-            $nodi[$id] = array_merge($n, ['id' => $id, 'livello' => $livello, 'stato' => self::stato($n['stato'] ?? null)]);
+            $nodi[$id] = array_merge($n, ['id' => $id, 'livello' => self::livello($n), 'stato' => self::stato($n['stato'] ?? null)]);
         }
         if ($nodi === []) {
-            return ['nodi' => [], 'collegamenti' => [], 'livelli' => [], 'altezza' => 0];
+            return ['nodi' => [], 'collegamenti' => [], 'livelli' => [], 'altezza' => 0, 'larghezza' => self::LARGHEZZA];
         }
 
         // solo i livelli usati, uno sotto l'altro
@@ -142,7 +222,7 @@ class MappaProgetto
         foreach ($usati as $riga => $l) {
             $inLivello = array_values(array_filter($nodi, fn ($n) => $n['livello'] === $l));
             $y = self::MARGINE_Y + $riga * self::PASSO_Y;
-            $livelli[] = ['nome' => self::LIVELLI[$l], 'y' => $y];
+            $livelli[] = ['nome' => self::LIVELLI[$l], 'y' => $y, 'h' => self::NODO_H + 40];
             $quanti = count($inLivello);
             foreach ($inLivello as $j => $n) {
                 $cx = self::LARGHEZZA * ($j + 0.5) / $quanti;
@@ -153,10 +233,22 @@ class MappaProgetto
             }
         }
 
+        return [
+            'nodi' => array_values($nodi),
+            'collegamenti' => $this->fili($nodi, $progetto['collegamenti']),
+            'livelli' => $livelli,
+            'altezza' => self::MARGINE_Y + (count($usati) - 1) * self::PASSO_Y + self::NODO_H + 40,
+            'larghezza' => self::LARGHEZZA,
+        ];
+    }
+
+    /** Collegamenti con il tracciato: i nodi devono avere gia' x, y, w, h. */
+    private function fili(array $nodi, array $elenco): array
+    {
         // collegamenti: piu' collegamenti tra gli stessi due nodi si allargano a ventaglio
         $coppie = [];
         $collegamenti = [];
-        foreach ($progetto['collegamenti'] as $i => $k) {
+        foreach ($elenco as $i => $k) {
             $da = (string) ($k['da'] ?? '');
             $a = (string) ($k['a'] ?? '');
             if (! isset($nodi[$da], $nodi[$a]) || $da === $a) {
@@ -189,14 +281,111 @@ class MappaProgetto
                 'nomeDa' => (string) ($da['nome'] ?? $da['id']),
                 'nomeA' => (string) ($a['nome'] ?? $a['id']),
                 'dati' => array_values(array_filter((array) ($k['dati'] ?? []), 'is_string')),
+                'variabili' => array_values(array_filter((array) ($k['variabili'] ?? []), 'is_string')),
             ]);
         }
 
+        return $out;
+    }
+
+    /**
+     * Mappa d'insieme dell'impianto (Francesco, 16/10/2026): unisce la vista scelta di tutte le
+     * macchine. I nodi condivisi (id che iniziano con "g-": SCADA, storico, Data Collector,
+     * gestionale, rete) compaiono una volta sola, centrati in alto; gli altri nodi stanno nella
+     * colonna della loro macchina, con il numero della macchina davanti al nome.
+     *
+     * @param  array<int, array{codice: string, num: string, nome: string, progetto: array}>  $macchine
+     */
+    public function impianto(array $macchine, string $vista): array
+    {
+        $COL = self::NODO_L + 24;
+        $RIGA = self::NODO_H + 18;
+        $nodi = [];
+        $elenco = [];
+        $colonne = [];
+        foreach ($macchine as $m) {
+            $g = $this->grafo($m['progetto'], $vista);
+            if ($g['nodi'] === []) {
+                continue;
+            }
+            $colonne[] = $m;
+            $mappaId = [];
+            foreach ($g['nodi'] as $i => $n) {
+                $orig = (string) ($n['id'] ?? 'n'.$i);
+                $condiviso = str_starts_with($orig, 'g-');
+                $id = $condiviso ? $orig : $m['codice'].':'.$orig;
+                $mappaId[$orig] = $id;
+                if (isset($nodi[$id])) {
+                    $nodi[$id]['macchine'][] = $m['codice'];
+                    continue;
+                }
+                $nodi[$id] = array_merge($n, [
+                    'id' => $id,
+                    'livello' => self::livello($n),
+                    'stato' => self::stato($n['stato'] ?? null),
+                    'condiviso' => $condiviso,
+                    'codice' => $m['codice'],
+                    'macchine' => [$m['codice']],
+                    'nome' => $condiviso ? (string) ($n['nome'] ?? $orig) : trim($m['num'].' · '.($n['nome'] ?? $orig)),
+                ]);
+            }
+            foreach ($g['collegamenti'] as $i => $k) {
+                $da = $mappaId[(string) ($k['da'] ?? '')] ?? null;
+                $a = $mappaId[(string) ($k['a'] ?? '')] ?? null;
+                if ($da === null || $a === null) {
+                    continue;
+                }
+                $elenco[] = array_merge($k, ['id' => $m['codice'].':'.($k['id'] ?? 'k'.$i), 'da' => $da, 'a' => $a, 'codice' => $m['codice'], 'macchinaNum' => $m['num']]);
+            }
+        }
+        if ($nodi === []) {
+            return ['nodi' => [], 'collegamenti' => [], 'livelli' => [], 'altezza' => 0, 'larghezza' => self::LARGHEZZA, 'colonne' => []];
+        }
+
+        $nColonne = max(1, count($colonne));
+        $larghezza = max(self::LARGHEZZA, $nColonne * $COL + 40);
+        $xColonna = [];
+        foreach ($colonne as $c => $m) {
+            $xColonna[$m['codice']] = (int) round(20 + $c * $COL + ($COL - self::NODO_L) / 2);
+        }
+
+        $usati = array_values(array_unique(array_map(fn ($n) => $n['livello'], $nodi)));
+        sort($usati);
+        $livelli = [];
+        $y = self::MARGINE_Y;
+        foreach ($usati as $l) {
+            $inLivello = array_filter($nodi, fn ($n) => $n['livello'] === $l);
+            $condivisi = array_values(array_filter($inLivello, fn ($n) => $n['condiviso']));
+            $propri = array_values(array_filter($inLivello, fn ($n) => ! $n['condiviso']));
+            $righe = 0;
+            if ($condivisi) {
+                $quanti = count($condivisi);
+                foreach ($condivisi as $j => $n) {
+                    $cx = $larghezza * ($j + 0.5) / $quanti;
+                    $nodi[$n['id']] = array_merge($nodi[$n['id']], ['x' => (int) round($cx - self::NODO_L / 2), 'y' => $y, 'w' => self::NODO_L, 'h' => self::NODO_H]);
+                }
+                $righe = 1;
+            }
+            $perMacchina = [];
+            foreach ($propri as $n) {
+                $r = $perMacchina[$n['codice']] = ($perMacchina[$n['codice']] ?? -1) + 1;
+                $nodi[$n['id']] = array_merge($nodi[$n['id']], ['x' => $xColonna[$n['codice']], 'y' => $y + ($righe + $r) * $RIGA, 'w' => self::NODO_L, 'h' => self::NODO_H]);
+            }
+            $righe += $perMacchina ? max($perMacchina) + 1 : 0;
+            $alto = ($righe - 1) * $RIGA + self::NODO_H + 40;
+            $livelli[] = ['nome' => self::LIVELLI[$l], 'y' => $y, 'h' => $alto];
+            $y += $alto + (self::PASSO_Y - self::NODO_H - 40);
+        }
+
+        $fili = $this->fili($nodi, $elenco);
+
         return [
             'nodi' => array_values($nodi),
-            'collegamenti' => $out,
+            'collegamenti' => $fili,
             'livelli' => $livelli,
-            'altezza' => self::MARGINE_Y + (count($usati) - 1) * self::PASSO_Y + self::NODO_H + 40,
+            'altezza' => $y - (self::PASSO_Y - self::NODO_H - 40) + 20, // sotto: il nome di ogni colonna
+            'larghezza' => $larghezza,
+            'colonne' => array_map(fn ($m) => ['codice' => $m['codice'], 'num' => $m['num'], 'nome' => $m['nome'], 'x' => $xColonna[$m['codice']]], $colonne),
         ];
     }
 

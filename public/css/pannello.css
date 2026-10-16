@@ -545,3 +545,55 @@ a.btn { text-decoration: none; display: inline-block }
 .sc-riga > a { text-decoration: none; color: inherit }
 .sc-elenco { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px }
 .sc-card h2 { font-size: 1.05rem; display: flex; gap: 8px; align-items: baseline }
+
+/* Mappe a blocchi e frecce: Oggi | Obiettivo 4.0, schermo intero, Mappa impianto (16/10/2026) */
+.pj-viste { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden }
+.pj-vista { padding: 3px 10px; font: 600 .82rem var(--f-display); color: var(--accent); text-decoration: none; background: var(--panel) }
+.pj-vista + .pj-vista { border-left: 1px solid var(--line) }
+.pj-vista[aria-current="true"] { background: var(--accent); color: var(--panel) }
+.pj-vista.off { color: var(--muted); background: var(--off-bg); cursor: not-allowed }
+.pj-btn-schermo { padding: 3px 10px; font-size: .82rem; margin-left: auto; text-decoration: none }
+.pj-filtro { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem }
+.pj-filtro select { font: inherit; padding: 2px 6px }
+/* colori delle frecce come nella legenda: verde passa, giallo collegato senza dati, arancio preparato vuoto,
+   rosso pieno non risponde, rosso tratteggiato manca, grigio tratteggiato da verificare, grigio chiaro n/a */
+.pj-mappa, .pj-legenda-fili { --giallo: #c29a00; --arancio: #d9730d }
+.pj-k.st-ok { --k: var(--ok) }
+.pj-k.st-corso { --k: var(--giallo) }
+.pj-k.st-attesa { --k: var(--arancio) }
+.pj-k.st-rischio { --k: var(--risk) }
+.pj-k.st-no { --k: var(--risk) }
+.pj-k.st-verificare { --k: var(--muted) }
+.pj-k.st-na, .pj-k.st-escluso { --k: var(--off) }
+.pj-k.st-no .pj-filo, .pj-k.st-verificare .pj-filo { stroke-dasharray: 7 5 }
+.pj-k.st-rischio .pj-filo, .pj-k.st-ok .pj-filo { stroke-dasharray: none }
+.mk.s-corso path { fill: #c29a00 }
+.mk.s-attesa path { fill: #d9730d }
+.mk.s-no path { fill: var(--risk) }
+.mk.s-verificare path { fill: var(--muted) }
+.pj-nodo.st-corso .pj-pallino { fill: #c29a00 }
+.pj-nodo.st-attesa .pj-pallino { fill: #d9730d }
+.pj-nodo.st-verificare .pj-pallino { fill: var(--muted) }
+.pj-nodo.st-no .pj-pallino { fill: var(--risk) }
+.pj-nodo.t-datacollector rect { stroke: #7a5cc4; stroke-dasharray: 6 3 }
+.pj-nodo.t-storico rect { stroke: var(--accent); stroke-dasharray: 6 3 }
+.pj-nodo.t-rete rect { stroke: var(--muted) }
+.pj-nodo.t-dispositivo rect { stroke: var(--run); stroke-dasharray: 4 3 }
+.pj-nodo.condiviso rect { stroke-width: 3 }
+.pj-nodo.spento { opacity: .2 }
+.pj-colonna { font: 600 11px var(--f-display); fill: var(--muted) }
+.pj-legenda-fili { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .82rem; color: var(--ink); margin-top: 4px }
+.pj-legenda-fili > span { display: inline-flex; align-items: center; gap: 6px; cursor: default }
+.pj-legenda-fili svg { flex: none }
+.pj-vars summary { cursor: pointer; font-size: .88rem; color: var(--accent) }
+.pj-vars ul { margin: 4px 0 0; padding-left: 18px; max-height: 220px; overflow: auto; font-size: .8rem }
+.pj-sch { display: block; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; margin-top: 4px }
+/* finestra a schermo intero */
+.schermo-mappa .topbar { display: none }
+.pj-schermo { display: grid; gap: 10px; padding: 12px 16px; min-height: 100vh; box-sizing: border-box }
+.pj-schermo-testa { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center }
+.pj-schermo-testa h1 { font: 700 1.3rem var(--f-display); margin: 0 }
+.pj-schermo .pj-mappa-griglia { grid-template-columns: minmax(0, 1fr) 320px }
+.pj-schermo .pj-mappa-scroll { max-height: calc(100vh - 140px); overflow: auto }
+@media (max-width: 900px) { .pj-schermo .pj-mappa-griglia { grid-template-columns: minmax(0, 1fr) } .pj-schermo .pj-mappa-scroll { max-height: none } }
+.pj-mappa-impianto .pj-nome { font-size: 12px }

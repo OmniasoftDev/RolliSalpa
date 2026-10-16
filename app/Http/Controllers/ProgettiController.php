@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Credenziale;
 use App\Models\Project;
 use App\Services\MappaProgetto;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -36,12 +37,13 @@ class ProgettiController extends Controller
     }
 
     /** GET /{slug}/progetti/{codice} — il progetto 4.0 di una macchina. */
-    public function show(string $slug, string $codice, MappaProgetto $mappa): View
+    public function show(Request $request, string $slug, string $codice, MappaProgetto $mappa): View
     {
         $progetto = Project::where('slug', $slug)->firstOrFail();
         $macchina = $progetto->machines()->with('questions')->where('codice', $codice)->firstOrFail();
         $p = $mappa->progetto($macchina);
         $requisiti = $mappa->requisiti($progetto->info ?? []);
+        $vista = $mappa->vista($p, $request->query('vista'));
 
         return view('progetti.show', [
             'progetto' => $progetto,
@@ -49,7 +51,8 @@ class ProgettiController extends Controller
             'macchina' => $macchina,
             'macchine' => $progetto->machines->reject(fn ($m) => $m->dato('escludiDaiConteggi'))->values(),
             'p' => $p,
-            'mappa' => $mappa->mappa($p),
+            'mappa' => $mappa->mappa($mappa->grafo($p, $vista)),
+            'vista' => $vista,
             'requisiti' => $requisiti,
             'avanzamento' => $mappa->avanzamento($p),
             'copertura' => $mappa->copertura($p, $requisiti),
@@ -59,6 +62,27 @@ class ProgettiController extends Controller
             'credenziali' => Credenziale::perOggetto($progetto, 'macchina', $macchina->codice),
             'storia' => $progetto->events()->limit(300)->get()
                 ->filter(fn ($e) => in_array($macchina->codice, $e->macchine ?? [], true))->take(12),
+        ]);
+    }
+
+    /** GET /{slug}/progetti/{codice}/mappa — la mappa della macchina a schermo intero (nuova finestra). */
+    public function mappa(Request $request, string $slug, string $codice, MappaProgetto $mappa): View
+    {
+        $progetto = Project::where('slug', $slug)->firstOrFail();
+        $macchina = $progetto->machines()->where('codice', $codice)->firstOrFail();
+        $p = $mappa->progetto($macchina);
+        $vista = $mappa->vista($p, $request->query('vista'));
+
+        return view('progetti.schermo', [
+            'progetto' => $progetto,
+            'titolo' => trim($macchina->dato('num', '').' '.$macchina->dato('nome')),
+            'p' => $p,
+            'vista' => $vista,
+            'mappa' => $mappa->mappa($mappa->grafo($p, $vista)),
+            'codice' => $macchina->codice,
+            'impianto' => false,
+            'base' => route('progetti.mappa', [$slug, $codice]),
+            'indietro' => route('progetti.show', [$slug, $codice]),
         ]);
     }
 }

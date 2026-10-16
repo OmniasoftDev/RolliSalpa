@@ -29,7 +29,7 @@
         @foreach ($righe as $r)
             @php $m = $r['macchina']; $s = $r['s']; @endphp
             <article class="card sc-card">
-                <h2><span class="num">{{ $m->dato('num', $m->codice) }}</span><a href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}#scada">{{ $m->dato('nome') }}</a></h2>
+                <h2><span class="num">{{ $m->dato('num', $m->codice) }}</span><a href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}#scada">{{ $m->dato('nome') }}</a> <a class="link-azione sc-mappa" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}?vista=oggi#mappa">Mappa</a></h2>
                 @if ($s)
                     <p><span class="sc-badge {{ $s['classe'] }}">{{ $s['etichetta'] }}</span> @if ($s['connessione'])<span class="mono">{{ $s['connessione'] }}</span>@endif</p>
                     <p class="sub">{{ count($s['variabili']) }} variabili · storico {{ $s['storico'] !== '' ? 'sì' : 'no' }}@if ($s['visto']) · visto il {{ \App\Services\Scada::giornoMese($s['visto']) }}@endif</p>

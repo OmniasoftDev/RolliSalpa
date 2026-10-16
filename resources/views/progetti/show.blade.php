@@ -10,7 +10,7 @@
     $fasi = collect($progetto->fasi ?? [])->filter(fn ($f) => is_array($f) && count($f) >= 2)->values();
     [$fatti, $tot] = $avanzamento;
     $attori = collect($p['attori'])->keyBy(fn ($a, $i) => (string) ($a['id'] ?? 'a'.$i));
-    $tipi = ['gestionale' => 'Gestionale', 'scada' => 'SCADA', 'cloud' => 'Cloud', 'plc' => 'PLC', 'hmi' => 'HMI', 'macchina' => 'Macchina', 'sensore' => 'Sensore', 'persona' => 'Persona'];
+    $tipi = \App\Services\MappaProgetto::TIPI;
     $righe = fn (string $t, int $per = 24) => array_slice(explode("\n", wordwrap($t, $per, "\n", true)), 0, 2);
     $reqChip = fn ($elenco) => collect((array) $elenco)->filter(fn ($r) => is_string($r))->map(fn ($r) => '<span class="req s-'.\App\Services\MappaProgetto::stato($p['requisiti'][$r]['stato'] ?? null).'" title="'.e($r.' '.($requisiti[$r] ?? '')).'">'.e($r).'</span>')->join(' ');
     $mail = fn (?string $c) => $c ? preg_replace_callback('/[\w.+-]+@[\w-]+\.[\w.-]+/', fn ($x) => '<a href="mailto:'.e($x[0]).'">'.e($x[0]).'</a>', e($c)) : '';
@@ -67,87 +67,28 @@
             </div>
         @endif
 
-        {{-- Mappa concettuale --}}
-        @if ($mappa['nodi'])
-            <section class="card pj-mappa-card" aria-labelledby="t-mappa">
+        {{-- Mappa a blocchi e frecce: Oggi (visto sullo SCADA) e Obiettivo 4.0 --}}
+        @if ($mappa['nodi'] || $p['oggi'] || $p['nodi'])
+            <section class="card pj-mappa-card" id="mappa" aria-labelledby="t-mappa">
                 <div class="pj-mappa-testa">
                     <h2 id="t-mappa">Mappa delle connessioni</h2>
-                    <span class="status-line">Tocca un sistema o un collegamento numerato per i dettagli.</span>
+                    @include('progetti.viste', ['p' => $p, 'vista' => $vista, 'base' => route('progetti.show', [$progetto->slug, $macchina->codice]), 'ancora' => '#mappa'])
+                    <a class="btn btn-sec pj-btn-schermo" href="{{ route('progetti.mappa', [$progetto->slug, $macchina->codice]) }}?vista={{ $vista }}" target="_blank" rel="noopener">Apri a schermo intero ↗</a>
                 </div>
-                <div class="pj-mappa-griglia">
-                    <div class="pj-mappa-scroll">
-                        <svg class="pj-mappa" viewBox="0 0 {{ \App\Services\MappaProgetto::LARGHEZZA }} {{ $mappa['altezza'] }}" role="group" aria-label="Mappa delle connessioni di {{ $macchina->dato('nome') }}">
-                            <defs>
-                                @foreach (array_keys($stati) as $s)
-                                    <marker id="fr-{{ $s }}" class="mk s-{{ $s }}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker>
-                                @endforeach
-                            </defs>
-                            @foreach ($mappa['livelli'] as $l)
-                                <rect class="pj-fascia" x="0" y="{{ $l['y'] - 26 }}" width="{{ \App\Services\MappaProgetto::LARGHEZZA }}" height="{{ 58 + 40 }}" rx="6"/>
-                                <text class="pj-fascia-nome" x="10" y="{{ $l['y'] - 11 }}">{{ $l['nome'] }}</text>
-                            @endforeach
-                            @foreach ($mappa['collegamenti'] as $k)
-                                <g class="pj-k st-{{ $k['stato'] }}" tabindex="0" role="button" data-dett="k-{{ $k['id'] }}" data-da="{{ $k['da'] }}" data-a="{{ $k['a'] }}" aria-label="Collegamento {{ $k['numero'] }}: {{ $k['nomeDa'] }} verso {{ $k['nomeA'] }}, {{ $k['titolo'] ?? '' }}">
-                                    <path class="pj-filo-tocco" d="{{ $k['path'] }}"/>
-                                    <path class="pj-filo" d="{{ $k['path'] }}" marker-end="url(#fr-{{ $k['stato'] }})" @if ($k['entrambi']) marker-start="url(#fr-{{ $k['stato'] }})" @endif/>
-                                </g>
-                            @endforeach
-                            {{-- i numeri dopo tutti i fili: un filo che incrocia non li copre --}}
-                            @foreach ($mappa['collegamenti'] as $k)
-                                <g class="pj-k st-{{ $k['stato'] }}" data-dett="k-{{ $k['id'] }}" data-da="{{ $k['da'] }}" data-a="{{ $k['a'] }}" aria-hidden="true">
-                                    <circle cx="{{ $k['lx'] }}" cy="{{ $k['ly'] }}" r="12"/>
-                                    <text x="{{ $k['lx'] }}" y="{{ $k['ly'] + 4 }}" text-anchor="middle">{{ $k['numero'] }}</text>
-                                </g>
-                            @endforeach
-                            @foreach ($mappa['nodi'] as $n)
-                                <g class="pj-nodo t-{{ $n['tipo'] ?? 'altro' }} st-{{ $n['stato'] }}" tabindex="0" role="button" data-dett="n-{{ $n['id'] }}" data-nodo="{{ $n['id'] }}" aria-label="{{ $n['nome'] ?? $n['id'] }}: {{ $stati[$n['stato']][1] }}">
-                                    <rect x="{{ $n['x'] }}" y="{{ $n['y'] }}" width="{{ $n['w'] }}" height="{{ $n['h'] }}" rx="8"/>
-                                    <text class="pj-tipo" x="{{ $n['x'] + 12 }}" y="{{ $n['y'] + 16 }}">{{ $tipi[$n['tipo'] ?? ''] ?? 'Sistema' }}</text>
-                                    @foreach ($righe((string) ($n['nome'] ?? $n['id'])) as $i => $riga)
-                                        <text class="pj-nome" x="{{ $n['x'] + 12 }}" y="{{ $n['y'] + 33 + $i * 16 }}">{{ $riga }}</text>
-                                    @endforeach
-                                    <circle class="pj-pallino" cx="{{ $n['x'] + $n['w'] - 14 }}" cy="{{ $n['y'] + 14 }}" r="7"/>
-                                    <text class="pj-pallino-t" x="{{ $n['x'] + $n['w'] - 14 }}" y="{{ $n['y'] + 18 }}" text-anchor="middle">{{ $stati[$n['stato']][0] }}</text>
-                                </g>
-                            @endforeach
-                        </svg>
-                    </div>
-                    <aside class="pj-dettagli" aria-live="polite">
-                        <div class="pj-dett" id="pj-vuoto"><p class="empty">Tocca un sistema per vedere chi lo gestisce e i suoi collegamenti, o un numero per i dati che passano.</p></div>
-                        @foreach ($mappa['nodi'] as $n)
-                            @php $att = isset($n['attore']) ? $attori[$n['attore']] ?? null : null; @endphp
-                            <div class="pj-dett" id="n-{{ $n['id'] }}" hidden>
-                                <span class="chip">{{ $tipi[$n['tipo'] ?? ''] ?? 'Sistema' }}</span>
-                                <h3>{{ $n['nome'] ?? $n['id'] }}</h3>
-                                <p>{!! $lamp($n['stato']) !!} {{ $stati[$n['stato']][1] }}</p>
-                                @if (! empty($n['dettaglio']))<p>{{ $n['dettaglio'] }}</p>@endif
-                                @if ($att)<p><b>Chi:</b> {{ $att['chi'] ?? '' }} <span class="src">({{ $att['ruolo'] ?? '' }})</span></p>@endif
-                                @php $suoi = collect($mappa['collegamenti'])->filter(fn ($k) => $k['da'] === $n['id'] || $k['a'] === $n['id']); @endphp
-                                @if ($suoi->isNotEmpty())
-                                    <ul class="plain pj-lista-k">@foreach ($suoi as $k)<li><button type="button" class="link-azione" data-apri="k-{{ $k['id'] }}">{{ $k['numero'] }}. {{ $k['titolo'] ?? '' }}</button> <span class="src">{{ $k['da'] === $n['id'] ? '→ '.$k['nomeA'] : '← '.$k['nomeDa'] }}</span></li>@endforeach</ul>
-                                @endif
-                                @if (! empty($n['fonte']))<p class="src">Fonte: {{ $n['fonte'] }}</p>@endif
-                            </div>
-                        @endforeach
+                <p class="status-line">
+                    @if ($vista === 'oggi')Com'è oggi, visto sullo SCADA{{ $p['oggi']['aggiornato'] ? ' il '.\Illuminate\Support\Carbon::parse($p['oggi']['aggiornato'])->format('d/m') : '' }}{{ $p['oggi']['fonte'] ? ' '.$p['oggi']['fonte'] : '' }}.@else Come deve essere per la perizia 4.0.@endif
+                    Tocca un blocco o una freccia per i dettagli.
+                </p>
+                @if ($mappa['nodi'])
+                    @include('progetti.mappa', ['mappa' => $mappa, 'slug' => $progetto->slug, 'codice' => $macchina->codice, 'titolo' => 'Mappa delle connessioni di '.$macchina->dato('nome'), 'impianto' => false])
+                    <ol class="pj-collegamenti">
                         @foreach ($mappa['collegamenti'] as $k)
-                            <div class="pj-dett" id="k-{{ $k['id'] }}" hidden>
-                                <span class="chip">Collegamento {{ $k['numero'] }}</span>
-                                <h3>{{ $k['titolo'] ?? '' }}</h3>
-                                <p>{{ $k['nomeDa'] }} {{ $k['entrambi'] ? '⇄' : '→' }} {{ $k['nomeA'] }}</p>
-                                <p>{!! $lamp($k['stato']) !!} {{ $stati[$k['stato']][1] }}@if (! empty($k['protocollo'])) · <span class="mono">{{ $k['protocollo'] }}</span>@endif</p>
-                                @if ($k['dati'])<ul class="pj-dati">@foreach ($k['dati'] as $d)<li>{{ $d }}</li>@endforeach</ul>@endif
-                                @if (! empty($k['nota']))<p>{{ $k['nota'] }}</p>@endif
-                                @if (! empty($k['fonte']))<p class="src">Fonte: {{ $k['fonte'] }}</p>@endif
-                            </div>
+                            <li><button type="button" class="pj-riga-k" data-apri="k-{{ $k['id'] }}">{!! $lamp($k['stato']) !!}<span class="pj-num">{{ $k['numero'] }}</span><span><b>{{ $k['titolo'] ?? '' }}</b> <span class="src">{{ $k['nomeDa'] }} {{ $k['entrambi'] ? '⇄' : '→' }} {{ $k['nomeA'] }}@if (! empty($k['protocollo'])) · {{ $k['protocollo'] }}@endif</span></span></button></li>
                         @endforeach
-                    </aside>
-                </div>
-                <ol class="pj-collegamenti">
-                    @foreach ($mappa['collegamenti'] as $k)
-                        <li><button type="button" class="pj-riga-k" data-apri="k-{{ $k['id'] }}">{!! $lamp($k['stato']) !!}<span class="pj-num">{{ $k['numero'] }}</span><span><b>{{ $k['titolo'] ?? '' }}</b> <span class="src">{{ $k['nomeDa'] }} {{ $k['entrambi'] ? '⇄' : '→' }} {{ $k['nomeA'] }}@if (! empty($k['protocollo'])) · {{ $k['protocollo'] }}@endif</span></span></button></li>
-                    @endforeach
-                </ol>
-                <div class="legend">@foreach ($stati as $k => $s)<span>{!! $lamp($k) !!}{{ $s[1] }}</span>@endforeach<span>⇄ nei due sensi</span></div>
+                    </ol>
+                @else
+                    <p class="empty">Nessun blocco in questa vista.</p>
+                @endif
             </section>
         @endif
 
@@ -295,30 +236,5 @@
 @endsection
 
 @push('script')
-<script>
-(() => {
-    const pannelli = document.querySelectorAll('.pj-dett');
-    const elementi = document.querySelectorAll('.pj-mappa [data-dett]');
-    const mostra = (id, scorri) => {
-        if (!document.getElementById(id)) return;
-        pannelli.forEach(p => p.hidden = p.id !== id);
-        elementi.forEach(e => e.classList.toggle('sel', e.dataset.dett === id));
-        // un sistema scelto accende i suoi collegamenti e spegne gli altri
-        const nodo = id.startsWith('n-') ? id.slice(2) : null;
-        document.querySelectorAll('.pj-k').forEach(k => {
-            k.classList.toggle('spento', nodo !== null && k.dataset.da !== nodo && k.dataset.a !== nodo);
-        });
-        document.querySelectorAll('.pj-nodo').forEach(n => n.classList.remove('spento'));
-        if (scorri) document.querySelector('.pj-dettagli').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    };
-    elementi.forEach(e => {
-        e.addEventListener('click', () => mostra(e.dataset.dett, matchMedia('(max-width: 900px)').matches));
-        e.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); mostra(e.dataset.dett, false); } });
-    });
-    document.addEventListener('click', ev => {
-        const b = ev.target.closest('[data-apri]');
-        if (b) mostra(b.dataset.apri, true);
-    });
-})();
-</script>
+<script src="{{ asset('js/mappa.js') }}?v={{ filemtime(public_path('js/mappa.js')) }}"></script>
 @endpush

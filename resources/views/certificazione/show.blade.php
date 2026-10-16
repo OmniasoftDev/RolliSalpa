@@ -140,7 +140,8 @@
                 @endif
 
                 <div class="cert-link">
-                    <a class="link-azione" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}">Progetto 4.0 e mappa</a>
+                    <a class="link-azione" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}?vista=oggi#mappa">Mappa</a>
+                    <a class="link-azione" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}">Progetto 4.0</a>
                     <a class="link-azione" href="{{ route('pannello', $progetto->slug) }}?m={{ $m->codice }}">Scheda nel quadro</a>
                     @if ($s && $s['aggiornato'])<span class="src">aggiornata il {{ $s['aggiornato']->format('d/m/Y') }}</span>@endif
                 </div>
