@@ -60,7 +60,7 @@ class MappeTest extends TestCase
         $u = User::factory()->create();
         $this->actingAs($u)->get('/salpa/progetti/m05')->assertOk()
             ->assertSee('Obiettivo 4.0')
-            ->assertSee('visto sullo SCADA il 16/10', false)
+            ->assertSee('sullo SCADA: ', false)->assertSee('visto il 16/10', false)
             ->assertSee('PLC NH3 25CPU1')
             ->assertSee('Data Collector')
             ->assertSee('i dati passano davvero')

@@ -1,9 +1,9 @@
 {{-- Blocco "Sullo SCADA" della pagina progetto: $s (scheda Scada) --}}
-<section class="card sc-blocco" id="scada" aria-labelledby="t-scada">
+<section class="card sc-blocco {{ $s['vecchio'] ? 'sc-vecchio' : '' }}" id="scada" aria-labelledby="t-scada">
     <h2 id="t-scada">Sullo SCADA <span class="sc-badge {{ $s['classe'] }}">{{ $s['etichetta'] }}</span></h2>
     <p class="sc-meta">
         @if ($s['connessione'])<b>{{ $s['connessione'] }}</b>@endif
-        @if ($s['visto'])<span class="src">visto il {{ \App\Services\Scada::giornoMese($s['visto']) }}{{ $s['fonte'] ? ' '.$s['fonte'] : '' }}</span>@endif
+        @include('scada.eta', ['data' => $s['visto'], 'fonte' => $s['fonte']])
     </p>
     @if ($s['sintesi'])<p>{{ $s['sintesi'] }}</p>@endif
 

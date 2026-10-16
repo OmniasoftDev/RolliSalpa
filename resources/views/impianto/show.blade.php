@@ -5,7 +5,7 @@
 
 @section('contenuto')
 <div class="wrap">
-    <section class="card pj-mappa-card" aria-labelledby="t-impianto">
+    <section class="card pj-mappa-card {{ $vista === 'oggi' && \App\Services\Scada::vecchio($dataOggi) ? 'pj-vecchio' : '' }}" aria-labelledby="t-impianto">
         <div class="pj-mappa-testa">
             <h2 id="t-impianto">Mappa impianto · {{ $progetto->nome }}</h2>
             @include('progetti.viste', ['p' => null, 'vista' => $vista, 'base' => route('impianto', $progetto->slug), 'ancora' => ''])
@@ -14,7 +14,7 @@
         </div>
         <p class="status-line">
             Tutte le macchine insieme: in alto i sistemi condivisi (gestionale, Data Collector, SCADA, storico, rete), sotto una colonna per macchina.
-            @if ($vista === 'oggi') Vista "Oggi": com'è, visto sullo SCADA. @else Vista "Obiettivo 4.0": come deve essere. @endif
+            @if ($vista === 'oggi') Vista "Oggi": com'è sullo SCADA, @include('scada.eta', ['data' => $dataOggi]) (la visita più vecchia tra le macchine). @else Vista "Obiettivo 4.0": come deve essere. @endif
         </p>
         @if ($mappa['nodi'])
             @include('progetti.mappa', ['mappa' => $mappa, 'slug' => $progetto->slug, 'codice' => '', 'titolo' => 'Mappa impianto '.$progetto->nome, 'impianto' => true])

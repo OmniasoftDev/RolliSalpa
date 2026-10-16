@@ -22,6 +22,17 @@
     $perChi = $macchine->flatMap(fn ($m) => $m->questions->where('fatto', false)->map(fn ($q) => [$m, $q]))
         ->groupBy(fn ($x) => $x[1]->chi ?: 'Da assegnare')->sortByDesc(fn ($g) => count($g));
     $tag = fn ($m) => $m->dato('num') === '—' ? '#generale' : '#'.$m->dato('num', $m->codice);
+    // Fase "scada": se la macchina ha il campo `scada` (visto dentro lo SCADA) si mostra lo stato a 5 valori
+    $conScada = $contate->contains(fn ($m) => \App\Services\Scada::statoDi($m) !== null);
+    $cella = function ($m, string $fase) use ($lamp) {
+        $ss = $fase === 'scada' ? \App\Services\Scada::statoDi($m) : null;
+        if ($ss === null) {
+            return $lamp($m->fase($fase));
+        }
+        $st = \App\Services\Scada::STATI[$ss];
+
+        return '<span class="sc-badge sc-mini '.$st[1].'" title="Sullo SCADA: '.e($st[0]).'">'.e(\App\Services\Scada::BREVI[$ss]).'</span>';
+    };
 @endphp
 
 @section('contenuto')
@@ -44,13 +55,15 @@
                 @php
                     [$v, $alert] = match ($c['tipo'] ?? '') {
                         'giorni' => [$giorni ?? '–', $giorni !== null && $giorni < 21],
-                        'fase' => [$n ? $contate->filter(fn ($m) => $m->fase($c['fase'] ?? '') === 'ok')->count().'/'.$n : '–', false],
+                        'fase' => ($c['fase'] ?? '') === 'scada' && $conScada
+                            ? [$n ? $contate->filter(fn ($m) => \App\Services\Scada::statoDi($m) === 'vivo')->count().'/'.$n : '–', false]
+                            : [$n ? $contate->filter(fn ($m) => $m->fase($c['fase'] ?? '') === 'ok')->count().'/'.$n : '–', false],
                         'rischio' => [$rischio, $rischio > 0],
                         'domande' => [$aperte, false],
                         default => ['–', false],
                     };
                 @endphp
-                <div class="gauge {{ $alert ? 'alert' : '' }}"><b>{{ $v }}</b><span>{{ $c['etichetta'] ?? '' }}</span></div>
+                <div class="gauge {{ $alert ? 'alert' : '' }}"><b>{{ $v }}</b><span>{{ ($c['tipo'] ?? '') === 'fase' && ($c['fase'] ?? '') === 'scada' && $conScada ? 'con dati vivi' : ($c['etichetta'] ?? '') }}</span></div>
             @endforeach
         </div>
     </header>
@@ -86,7 +99,7 @@
                         @endif
                         <tr class="row" tabindex="0" data-m="{{ $m->codice }}" data-attn="{{ $m->daSeguire() ? 1 : 0 }}" aria-label="{{ $m->dato('nome') }}">
                             <td class="name"><span class="num">{{ $m->dato('num', $m->codice) }}</span>{{ $m->dato('nome') }}<span class="sub">{{ $m->dato('fornitore') }}</span></td>
-                            @foreach ($fasi as $f)<td>{!! $lamp($m->fase($f[0])) !!}</td>@endforeach
+                            @foreach ($fasi as $f)<td>{!! $cella($m, $f[0]) !!}</td>@endforeach
                         </tr>
                     @empty
                         <tr><td class="empty" colspan="{{ $fasi->count() + 1 }}">Nessuna macchina: i dati arrivano alla prossima sincronizzazione dal PC.</td></tr>
@@ -95,6 +108,9 @@
                 </table>
             </div>
             <div class="legend">@foreach ($stati as $k => $s)<span>{!! $lamp($k) !!}{{ $s[1] }}</span>@endforeach</div>
+            @if ($conScada)
+                <div class="legend sc-legenda">Su SCADA (visto dentro lo SCADA): @foreach (\App\Services\Scada::STATI as $k => $st)<span><span class="sc-badge sc-mini {{ $st[1] }}">{{ \App\Services\Scada::BREVI[$k] }}</span> {{ $st[0] }}</span>@endforeach</div>
+            @endif
 
             @foreach ($macchine as $m)
                 @php
@@ -115,7 +131,7 @@
                     </div>
                     @if ($m->dato('prossimo'))<div class="next"><b>Prossimo passo</b>{{ $m->dato('prossimo') }}</div>@endif
                     @include('scada.riga', ['s' => app(\App\Services\Scada::class)->scheda($progetto, $m), 'link' => route('progetti.show', [$progetto->slug, $m->codice]).'#scada'])
-                    <div class="phases">@foreach ($fasi as $f)<div class="phase">{!! $lamp($m->fase($f[0])) !!}{{ $f[1] }}</div>@endforeach</div>
+                    <div class="phases">@foreach ($fasi as $f)<div class="phase">{!! $cella($m, $f[0]) !!}{{ $f[1] }}</div>@endforeach</div>
                     @if ($kv->isNotEmpty())
                         <dl class="kv">@foreach ($kv as $k => $v)<div><dt>{{ $k }}</dt><dd class="{{ $k === 'IP' ? 'mono' : '' }}">{{ $v }}</dd></div>@endforeach</dl>
                     @endif

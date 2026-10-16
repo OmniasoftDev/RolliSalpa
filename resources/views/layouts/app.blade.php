@@ -27,6 +27,7 @@
                     <a href="{{ route('pannello', $progetto->slug) }}" @if (request()->routeIs('pannello')) aria-current="page" @endif>Quadro</a>
                     <a href="{{ route('progetti', $progetto->slug) }}" @if (request()->routeIs('progetti', 'progetti.show')) aria-current="page" @endif>Progetti 4.0</a>
                     <a href="{{ route('certificazione', $progetto->slug) }}" @if (request()->routeIs('certificazione')) aria-current="page" @endif>Certificazione</a>
+                    <a href="{{ route('requisiti', $progetto->slug) }}" @if (request()->routeIs('requisiti')) aria-current="page" @endif>Requisiti</a>
                     <a href="{{ route('scada', $progetto->slug) }}" @if (request()->routeIs('scada')) aria-current="page" @endif>SCADA</a>
                     <a href="{{ route('impianto', $progetto->slug) }}" @if (request()->routeIs('impianto')) aria-current="page" @endif>Mappa impianto</a>
                     <a href="{{ route('sistemi', $progetto->slug) }}" @if (request()->routeIs('sistemi', 'sistemi.show')) aria-current="page" @endif>Sistemi</a>

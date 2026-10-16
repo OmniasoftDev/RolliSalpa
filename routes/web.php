@@ -11,6 +11,7 @@ use App\Http\Controllers\LavoroController;
 use App\Http\Controllers\PannelloController;
 use App\Http\Controllers\ProgettiController;
 use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\RequisitiController;
 use App\Http\Controllers\ScadaController;
 use App\Http\Controllers\SistemiController;
 use App\Http\Controllers\WorkflowController;
@@ -48,6 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/{slug}/impianto/mappa', [ImpiantoController::class, 'schermo'])->where('slug', '[a-z0-9-]+')->name('impianto.mappa');
     Route::get('/{slug}/certificazione', [CertificazioneController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('certificazione');
     Route::get('/{slug}/scada', [ScadaController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('scada');
+    Route::post('/{slug}/scada/bozza', [ScadaController::class, 'bozza'])->where('slug', '[a-z0-9-]+')->middleware('throttle:20,1')->name('scada.bozza');
+    Route::get('/{slug}/requisiti', [RequisitiController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('requisiti');
     Route::get('/{slug}/schermate/{codice}/{file}', [ScadaController::class, 'file'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+', 'file' => '[A-Za-z0-9._-]+'])->name('schermate.file');
     Route::get('/{slug}/sistemi', [SistemiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('sistemi');
     Route::get('/{slug}/sistemi/{codice}', [SistemiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('sistemi.show');

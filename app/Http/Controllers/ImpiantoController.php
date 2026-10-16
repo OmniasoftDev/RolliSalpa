@@ -27,6 +27,8 @@ class ImpiantoController extends Controller
             'vista' => $vista,
             'mappa' => $mappa->impianto($macchine, $vista),
             'macchine' => $macchine,
+            // data della visita piu' vecchia tra le viste Oggi (per l'eta' dei dati)
+            'dataOggi' => collect($macchine)->map(fn ($m) => $m['progetto']['oggi']['aggiornato'] ?? null)->filter()->sort()->first(),
             'senzaVista' => collect($macchine)->filter(fn ($m) => $mappa->grafo($m['progetto'], $vista, true)['nodi'] === [])->values(),
         ];
     }

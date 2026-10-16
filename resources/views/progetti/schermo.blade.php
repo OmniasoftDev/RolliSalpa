@@ -5,14 +5,15 @@
 @section('classe', 'p-'.$progetto->slug.' schermo-mappa')
 
 @section('contenuto')
-<div class="pj-schermo">
+@php $dataOggi = $p !== null ? ($p['oggi']['aggiornato'] ?? null) : ($dataOggi ?? null); @endphp
+<div class="pj-schermo {{ $vista === 'oggi' && \App\Services\Scada::vecchio($dataOggi) ? 'pj-vecchio' : '' }}">
     <header class="pj-schermo-testa">
         <h1>{{ $titolo }}</h1>
         @include('progetti.viste', ['p' => $p, 'vista' => $vista, 'base' => $base, 'ancora' => ''])
         @if ($impianto)
             @include('impianto.filtro', ['macchine' => $macchine])
         @endif
-        <span class="status-line">@if ($vista === 'oggi')Com'è oggi, visto sullo SCADA.@else Obiettivo 4.0.@endif Tocca un blocco o una freccia.</span>
+        <span class="status-line">@if ($vista === 'oggi')Com'è oggi, sullo SCADA: @include('scada.eta', ['data' => $dataOggi]).@else Obiettivo 4.0.@endif Tocca un blocco o una freccia.</span>
         <a class="link-azione" href="{{ $indietro }}?vista={{ $vista }}">Torna alla pagina</a>
     </header>
     @if ($mappa['nodi'])

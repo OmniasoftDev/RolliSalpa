@@ -69,14 +69,14 @@
 
         {{-- Mappa a blocchi e frecce: Oggi (visto sullo SCADA) e Obiettivo 4.0 --}}
         @if ($mappa['nodi'] || $p['oggi'] || $p['nodi'])
-            <section class="card pj-mappa-card" id="mappa" aria-labelledby="t-mappa">
+            <section class="card pj-mappa-card {{ $vista === 'oggi' && \App\Services\Scada::vecchio($p['oggi']['aggiornato'] ?? null) ? 'pj-vecchio' : '' }}" id="mappa" aria-labelledby="t-mappa">
                 <div class="pj-mappa-testa">
                     <h2 id="t-mappa">Mappa delle connessioni</h2>
                     @include('progetti.viste', ['p' => $p, 'vista' => $vista, 'base' => route('progetti.show', [$progetto->slug, $macchina->codice]), 'ancora' => '#mappa'])
                     <a class="btn btn-sec pj-btn-schermo" href="{{ route('progetti.mappa', [$progetto->slug, $macchina->codice]) }}?vista={{ $vista }}" target="_blank" rel="noopener">Apri a schermo intero ↗</a>
                 </div>
                 <p class="status-line">
-                    @if ($vista === 'oggi')Com'è oggi, visto sullo SCADA{{ $p['oggi']['aggiornato'] ? ' il '.\Illuminate\Support\Carbon::parse($p['oggi']['aggiornato'])->format('d/m') : '' }}{{ $p['oggi']['fonte'] ? ' '.$p['oggi']['fonte'] : '' }}.@else Come deve essere per la perizia 4.0.@endif
+                    @if ($vista === 'oggi')Com'è oggi, sullo SCADA: @include('scada.eta', ['data' => $p['oggi']['aggiornato'] ?? null, 'fonte' => $p['oggi']['fonte'] ?? null]).@else Come deve essere per la perizia 4.0.@endif
                     Tocca un blocco o una freccia per i dettagli.
                 </p>
                 @if ($mappa['nodi'])

@@ -597,3 +597,49 @@ a.btn { text-decoration: none; display: inline-block }
 .pj-schermo .pj-mappa-scroll { max-height: calc(100vh - 140px); overflow: auto }
 @media (max-width: 900px) { .pj-schermo .pj-mappa-griglia { grid-template-columns: minmax(0, 1fr) } .pj-schermo .pj-mappa-scroll { max-height: none } }
 .pj-mappa-impianto .pj-nome { font-size: 12px }
+
+/* Requisiti R1–R13 (16/10/2026): matrice macchine × requisiti, colori come le frecce delle mappe */
+.rq-scoperti { margin: 6px 0 0; padding: 6px 10px; border-left: 4px solid var(--risk); background: var(--risk-bg); border-radius: 4px }
+.rq-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel) }
+.rq-tab { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .85rem }
+.rq-tab th, .rq-tab td { border-bottom: 1px solid var(--line); padding: 4px; text-align: center; vertical-align: middle }
+.rq-tab thead th { font-weight: 600; min-width: 54px; vertical-align: bottom }
+.rq-tab .rq-r { display: block; font: 700 .85rem var(--f-mono) }
+.rq-tab .rq-nome { display: block; font-size: .68rem; font-weight: 400; color: var(--muted); line-height: 1.15; max-width: 80px; margin: 0 auto }
+.rq-tab .rq-macchina { position: sticky; left: 0; z-index: 2; background: var(--panel); text-align: left; min-width: 170px; max-width: 220px; border-right: 1px solid var(--line) }
+.rq-tab .rq-macchina a { text-decoration: none; color: var(--ink) }
+.rq-cella, .rq-cella-leg { --rq-c: var(--off); --rq-bg: var(--off-bg) }
+.rq-cella { background: var(--rq-bg); position: relative; padding: 0 }
+.rq-cella details > summary { list-style: none; cursor: pointer; padding: 8px 2px; font: 700 .85rem var(--f-mono); color: var(--rq-c) }
+.rq-cella details > summary::-webkit-details-marker { display: none }
+.rq-cella details[open] > summary { outline: 2px solid var(--accent) }
+.rq-prova { font-size: .7rem; margin-left: 2px }
+.rq-pop { position: absolute; z-index: 5; top: 100%; left: 50%; transform: translateX(-50%); width: 260px; text-align: left; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgb(0 0 0 / .18); padding: 8px 10px; font-size: .82rem; display: grid; gap: 4px }
+.rq-pop p { margin: 0 }
+.rq-cella-leg { display: inline-grid; place-items: center; width: 24px; height: 18px; border-radius: 4px; background: var(--rq-bg); color: var(--rq-c); font: 700 .7rem var(--f-mono); margin-right: 4px; vertical-align: -3px }
+.rq-cella.s-ok, .rq-cella-leg.s-ok { --rq-c: var(--ok); --rq-bg: var(--ok-bg) }
+.rq-cella.s-corso, .rq-cella-leg.s-corso { --rq-c: #7a6200; --rq-bg: #fbf3c4 }
+.rq-cella.s-attesa, .rq-cella-leg.s-attesa { --rq-c: #a8530a; --rq-bg: #fbe3cc }
+.rq-cella.s-rischio, .rq-cella-leg.s-rischio { --rq-c: #fff; --rq-bg: var(--risk) }
+.rq-cella.s-no, .rq-cella-leg.s-no { --rq-c: var(--risk); --rq-bg: var(--risk-bg) }
+.rq-cella.s-verificare, .rq-cella-leg.s-verificare { --rq-c: var(--muted); --rq-bg: repeating-linear-gradient(45deg, var(--off-bg) 0 5px, transparent 5px 10px) }
+.rq-cella.s-na, .rq-cella.s-escluso, .rq-cella-leg.s-na { --rq-c: var(--off); --rq-bg: var(--off-bg) }
+.rq-cella.s-ok, .rq-cella.s-corso, .rq-cella.s-attesa, .rq-cella.s-rischio, .rq-cella.s-no, .rq-cella.s-verificare, .rq-cella.s-na, .rq-cella.s-escluso { border: 1px solid var(--panel) }
+.rq-perc { font: 700 .85rem var(--f-mono) }
+.rq-tot { font: 600 .8rem var(--f-mono); color: var(--muted) }
+.rq-tot.rq-zero { color: var(--risk) }
+.rq-legenda { display: flex; flex-wrap: wrap; gap: 6px 14px }
+@media (prefers-color-scheme: dark) {
+  .rq-cella.s-corso, .rq-cella-leg.s-corso { --rq-c: #e8d36a; --rq-bg: #3a3510 }
+  .rq-cella.s-attesa, .rq-cella-leg.s-attesa { --rq-c: #f0a35c; --rq-bg: #3d2610 }
+}
+/* Eta' dei dati SCADA e dati da rivedere (oltre 7 giorni) */
+.sc-eta { font-size: .8rem; color: var(--muted) }
+.sc-eta-vecchia { color: var(--risk); font-weight: 600 }
+.sc-avviso { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; font-size: .75rem; background: var(--off-bg); color: var(--muted); border: 1px dashed var(--muted) }
+.sc-vecchio .sc-badge, .pj-vecchio .pj-mappa { filter: grayscale(1); opacity: .6 }
+.sc-mini { padding: 0 6px; font-size: .7rem }
+.sc-legenda { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; font-size: .8rem }
+/* Domande dallo SCADA */
+.sc-dom-lista { margin: 6px 0; padding-left: 18px; display: grid; gap: 4px }
+.sc-dom-lista .num { margin-right: 4px }

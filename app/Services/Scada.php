@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Compito;
 use App\Models\Machine;
 use App\Models\Project;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -23,7 +25,13 @@ class Scada
         'assente' => ['nessuna connessione', 'sc-assente'],
     ];
 
+    /** Etichetta breve per il quadro (colonna "Su SCADA"). */
+    public const BREVI = ['vivo' => 'vivo', 'collegato' => 'collegato', 'preparato' => 'preparato', 'nonrisponde' => 'non risponde', 'assente' => 'assente'];
+
     public const ESTENSIONI = ['jpg', 'jpeg', 'png', 'webp'];
+
+    /** Oltre questi giorni dalla visita i dati SCADA sono "da rivedere alla prossima visita" (grigi). */
+    public const GIORNI_VALIDI = 7;
 
     public static function cartella(string $slug, string $codice): string
     {
@@ -114,6 +122,8 @@ class Scada
 
         return [
             'visto' => $testo('visto'),
+            'giorni' => self::giorni($testo('visto')),
+            'vecchio' => self::vecchio($testo('visto')),
             'fonte' => $testo('fonte'),
             'stato' => $stato,
             'etichetta' => self::STATI[$stato][0],
@@ -126,6 +136,69 @@ class Scada
             'schermate' => $this->schermate($progetto, $macchina->codice, (array) ($s['schermate'] ?? [])),
             'domande' => array_values(array_filter(array_map(fn ($d) => is_scalar($d) ? (string) $d : '', (array) ($s['domande'] ?? [])))),
         ];
+    }
+
+    /** Giorni passati dalla visita (data AAAA-MM-GG), o null se la data non c'e'. */
+    public static function giorni(?string $data): ?int
+    {
+        if (! is_string($data) || ! preg_match('/^\d{4}-\d{2}-\d{2}/', $data)) {
+            return null;
+        }
+
+        return (int) Carbon::parse(substr($data, 0, 10))->startOfDay()->diffInDays(today(), false);
+    }
+
+    /** Vero se la visita e' piu' vecchia di GIORNI_VALIDI giorni. */
+    public static function vecchio(?string $data): bool
+    {
+        $g = self::giorni($data);
+
+        return $g !== null && $g > self::GIORNI_VALIDI;
+    }
+
+    /** Lo stato SCADA della macchina (vivo, collegato, ...) se ha il campo `scada`, altrimenti null. */
+    public static function statoDi(Machine $m): ?string
+    {
+        $s = $m->dato('scada');
+        if (! is_array($s) || $s === []) {
+            return null;
+        }
+
+        return isset(self::STATI[$s['stato'] ?? '']) ? $s['stato'] : 'assente';
+    }
+
+    /** "oggi", "ieri", "N giorni fa". */
+    public static function fa(int $giorni): string
+    {
+        return match (true) {
+            $giorni <= 0 => 'oggi',
+            $giorni === 1 => 'ieri',
+            default => $giorni.' giorni fa',
+        };
+    }
+
+    /**
+     * Domande nate dallo SCADA: `scada.domande` di ogni macchina e i compiti proposti/aperti la cui
+     * fonte o testo cita lo SCADA visto da dentro.
+     *
+     * @return array{domande: array<int, array{num: string, nome: string, codice: string, testo: string}>, compiti: \Illuminate\Support\Collection}
+     */
+    public function domande(Project $progetto): array
+    {
+        $domande = [];
+        foreach ($progetto->machines->reject(fn ($m) => $m->dato('escludiDaiConteggi')) as $m) {
+            $s = $m->dato('scada');
+            foreach ((array) (is_array($s) ? ($s['domande'] ?? []) : []) as $d) {
+                if (is_scalar($d) && trim((string) $d) !== '') {
+                    $domande[] = ['num' => (string) $m->dato('num', $m->codice), 'nome' => (string) $m->dato('nome', ''), 'codice' => $m->codice, 'testo' => (string) $d];
+                }
+            }
+        }
+        $compiti = $progetto->compiti()->whereIn('stato', ['proposto', 'aperto'])->orderBy('id')->get()
+            ->filter(fn (Compito $c) => stripos((string) $c->fonte, 'SCADA visto da dentro') !== false || stripos((string) $c->testo, 'SCADA visto da dentro') !== false)
+            ->values();
+
+        return ['domande' => $domande, 'compiti' => $compiti];
     }
 
     /** "16/10" dalla data della visita (AAAA-MM-GG), o il testo com'e'. */
