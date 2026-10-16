@@ -27,7 +27,7 @@ class ImpiantoController extends Controller
             'vista' => $vista,
             'mappa' => $mappa->impianto($macchine, $vista),
             'macchine' => $macchine,
-            'senzaVista' => collect($macchine)->filter(fn ($m) => $mappa->grafo($m['progetto'], $vista)['nodi'] === [])->values(),
+            'senzaVista' => collect($macchine)->filter(fn ($m) => $mappa->grafo($m['progetto'], $vista, true)['nodi'] === [])->values(),
         ];
     }
 

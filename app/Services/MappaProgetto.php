@@ -138,11 +138,14 @@ class MappaProgetto
         return 'oggi';
     }
 
-    /** Nodi e collegamenti della vista. */
-    public function grafo(array $progetto, string $vista): array
+    /** Nodi e collegamenti della vista; con $stretto la vista "oggi" mancante resta vuota (Mappa impianto). */
+    public function grafo(array $progetto, string $vista, bool $stretto = false): array
     {
         if ($vista === 'oggi' && $progetto['oggi'] !== null) {
             return ['nodi' => $progetto['oggi']['nodi'], 'collegamenti' => $progetto['oggi']['collegamenti']];
+        }
+        if ($vista === 'oggi' && $stretto) {
+            return ['nodi' => [], 'collegamenti' => []];
         }
 
         return ['nodi' => $progetto['nodi'], 'collegamenti' => $progetto['collegamenti']];
@@ -304,7 +307,7 @@ class MappaProgetto
         $elenco = [];
         $colonne = [];
         foreach ($macchine as $m) {
-            $g = $this->grafo($m['progetto'], $vista);
+            $g = $this->grafo($m['progetto'], $vista, true);
             if ($g['nodi'] === []) {
                 continue;
             }
