@@ -70,6 +70,8 @@ class MiglioramentiScadaTest extends TestCase
         $this->get('/salpa/requisiti')->assertRedirect('/login');
 
         $r = $this->actingAs(User::factory()->create())->get('/salpa/requisiti')->assertOk();
+        preg_match_all('/<td class="rq-tot[^"]*">([^<]*)<\/td>/', $r->getContent(), $tot);
+        fwrite(STDERR, "\nDEBUG rq-tot: ".implode(' | ', $tot[1])."\n");
         $r->assertSee('Requisiti R1–R13 · Salpa')
             ->assertSee('Separatore NH3')->assertSee('Imbustatrice COMEK')->assertDontSee('Domande generali')
             ->assertSee('rq-cella s-ok', false)->assertSee('rq-cella s-na', false)->assertSee('rq-cella s-rischio', false)

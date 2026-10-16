@@ -86,7 +86,7 @@ class ScadaController extends Controller
         } catch (APIStatusException $e) {
             Log::warning('Bozza SCADA: errore API', ['messaggio' => $e->getMessage()]);
 
-            return response()->json(['errore' => 'Errore dell'API di Claude: riprova.'], 502);
+            return response()->json(['errore' => 'Errore dell\'API di Claude: riprova.'], 502);
         } catch (Throwable $e) {
             Log::error('Bozza SCADA: errore', ['eccezione' => $e]);
 

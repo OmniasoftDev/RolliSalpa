@@ -96,9 +96,7 @@
         ris.hidden = false; link(); b.textContent = 'Riscrivi';
     });
     document.getElementById('sc-bozza-copia').addEventListener('click', async e => {
-        try { await navigator.clipboard.writeText((oggetto.value ? 'Oggetto: ' + oggetto.value + '
-
-' : '') + corpo.value); e.target.textContent = 'Copiato'; }
+        try { await navigator.clipboard.writeText((oggetto.value ? 'Oggetto: ' + oggetto.value + '\n\n' : '') + corpo.value); e.target.textContent = 'Copiato'; }
         catch (x) { corpo.select(); e.target.textContent = 'Copia con Ctrl+C'; }
     });
 })();
