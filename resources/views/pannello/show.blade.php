@@ -114,6 +114,7 @@
                         <button type="button" class="btn btn-sec" data-apri-appunto="{{ $m->codice }}">+ Appunto su questa macchina</button>
                     </div>
                     @if ($m->dato('prossimo'))<div class="next"><b>Prossimo passo</b>{{ $m->dato('prossimo') }}</div>@endif
+                    @include('scada.riga', ['s' => app(\App\Services\Scada::class)->scheda($progetto, $m), 'link' => route('progetti.show', [$progetto->slug, $m->codice]).'#scada'])
                     <div class="phases">@foreach ($fasi as $f)<div class="phase">{!! $lamp($m->fase($f[0])) !!}{{ $f[1] }}</div>@endforeach</div>
                     @if ($kv->isNotEmpty())
                         <dl class="kv">@foreach ($kv as $k => $v)<div><dt>{{ $k }}</dt><dd class="{{ $k === 'IP' ? 'mono' : '' }}">{{ $v }}</dd></div>@endforeach</dl>

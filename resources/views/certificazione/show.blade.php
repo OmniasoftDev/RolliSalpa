@@ -73,6 +73,7 @@
 
                 @if ($s)
                     @if ($s['sintesi'])<p class="cert-sintesi">{{ $s['sintesi'] }}</p>@endif
+                    @include('scada.riga', ['s' => app(\App\Services\Scada::class)->scheda($progetto, $m), 'link' => route('progetti.show', [$progetto->slug, $m->codice]).'#scada'])
                     @if ($s['rischio'])<p class="cert-rischio"><b>Rischio</b> {{ $s['rischio'] }}</p>@endif
 
                     @if ($s['tappe'])

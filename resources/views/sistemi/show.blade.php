@@ -103,6 +103,14 @@
         </section>
     @endif
 
+    @php $schermate = app(\App\Services\Scada::class)->schermate($progetto, $sistema['codice'], $sistema['schermate']); @endphp
+    @if ($schermate)
+        <section class="card" aria-labelledby="t-schermate">
+            <h2 id="t-schermate">Schermate dal PC <span class="conta">{{ count($schermate) }}</span></h2>
+            @include('scada.galleria', ['galleria' => $schermate])
+        </section>
+    @endif
+
     <section class="card" aria-labelledby="t-foto">
         <h2 id="t-foto">Foto e screenshot <span class="conta">{{ $foto->count() }}</span></h2>
         @if ($foto->isNotEmpty())

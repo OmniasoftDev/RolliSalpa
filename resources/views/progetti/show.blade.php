@@ -54,6 +54,9 @@
 
     @include('credenziali.blocco', ['oggettoTipo' => 'macchina', 'oggettoCodice' => $macchina->codice])
 
+    @php $scadaScheda = app(\App\Services\Scada::class)->scheda($progetto, $macchina); @endphp
+    @if ($scadaScheda)@include('scada.blocco', ['s' => $scadaScheda])@endif
+
     @unless ($p['impostato'])
         <div class="card"><p class="empty">Il progetto 4.0 di questa macchina non è ancora impostato. Arriva dal PC (campo <span class="mono">progetto</span> della macchina) alla prossima pubblicazione.</p></div>
     @else

@@ -58,6 +58,7 @@ jobs:
             --exclude 'tests' --exclude '.env' --exclude '*.md' \
             --exclude 'phpunit.xml' --exclude 'package.json' --exclude 'vite.config.js' \
             --exclude 'storage/logs/*' --exclude 'storage/framework/cache/*' \
+            --exclude 'storage/app/private/*' \
             --exclude 'storage/framework/sessions/*' --exclude 'storage/framework/views/*' \
             ./ /tmp/pkg/
           cd /tmp/pkg && zip -qr "$RUNNER_TEMP/rollisalpa.zip" .
@@ -95,6 +96,7 @@ jobs:
             **/.env
             **/.env.*
             **/storage/logs/**
+            **/storage/app/private/**
             **/storage/framework/cache/**
             **/storage/framework/sessions/**
             **/storage/framework/views/**

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AppuntiController;
 use App\Http\Controllers\Api\RegistroController;
+use App\Http\Controllers\Api\SchermateController;
 use App\Http\Controllers\Api\SyncController;
 use App\Http\Middleware\TokenSincronizzazione;
 use Illuminate\Support\Facades\Route;
@@ -17,4 +18,7 @@ Route::middleware([TokenSincronizzazione::class, 'throttle:120,1'])->group(funct
     Route::post('/appunti/elaborati', [AppuntiController::class, 'elaborati']);
     Route::delete('/appunti/{id}', [AppuntiController::class, 'cancella'])->whereNumber('id');
     Route::get('/allegati/{allegato}', [AppuntiController::class, 'file']);
+    // Schermate dello SCADA per macchina o sistema (storage local schermate/{slug}/{codice})
+    Route::post('/schermate', [SchermateController::class, 'store']);
+    Route::get('/schermate', [SchermateController::class, 'index']);
 });

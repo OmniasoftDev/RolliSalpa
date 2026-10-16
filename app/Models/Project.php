@@ -65,7 +65,7 @@ class Project extends Model
                 $voce[$k] = is_scalar($s[$k] ?? null) ? (string) $s[$k] : '';
             }
             $voce['nome'] = $voce['nome'] !== '' ? $voce['nome'] : $s['codice'];
-            foreach (['anagrafica', 'collegamenti', 'contenuti', 'foto', 'credenziali', 'aperti', 'documenti'] as $k) {
+            foreach (['anagrafica', 'collegamenti', 'contenuti', 'foto', 'schermate', 'credenziali', 'aperti', 'documenti'] as $k) {
                 $voce[$k] = $elenco($s, $k);
             }
             $sistemi[] = $voce;

@@ -62,7 +62,7 @@ Nuove tabelle o colonne: migration **piu'** SQL equivalente in `database/sql/`, 
 | 05/10/2026 | `database/sql/2026-10-05-appuntamenti.sql` | tabella `appuntamenti` (appuntamenti da accettare, poi nel calendario Google Salpa-Rolli) | importato 05/10/2026 (Francesco), prima del push |
 | 14/10/2026 | `database/sql/2026-10-14-credenziali.sql` | tabelle `credenziali` (valori cifrati con APP_KEY) e `credenziali_accessi` (cassaforte delle credenziali di sistemi e macchine) | **da importare (Francesco)**: il codice e' gia' in linea e fino all'import mostra "Cassaforte non ancora attiva" |
 
-Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).
+Gli allegati degli appunti stanno in `storage/app/private/appunti/AAAA/MM/` sul server: non sono nel repository e il deploy non li tocca. Lo stesso per le **schermate dello SCADA** caricate dal PC con `POST /api/schermate`: `storage/app/private/schermate/{slug}/{codice}/` (dal 16/10/2026 la Action esclude `storage/app/private/**` sia dallo zip sia dall'FTP, per non toccarle mai). Vanno inclusi nei backup dell'account. Limiti di caricamento in `public/.user.ini` (20 MB a file).
 
 ## Chat con Claude
 

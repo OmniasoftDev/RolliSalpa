@@ -10,6 +10,7 @@ use App\Http\Controllers\LavoroController;
 use App\Http\Controllers\PannelloController;
 use App\Http\Controllers\ProgettiController;
 use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\ScadaController;
 use App\Http\Controllers\SistemiController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/{slug}/progetti', [ProgettiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('progetti');
     Route::get('/{slug}/progetti/{codice}', [ProgettiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('progetti.show');
     Route::get('/{slug}/certificazione', [CertificazioneController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('certificazione');
+    Route::get('/{slug}/scada', [ScadaController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('scada');
+    Route::get('/{slug}/schermate/{codice}/{file}', [ScadaController::class, 'file'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+', 'file' => '[A-Za-z0-9._-]+'])->name('schermate.file');
     Route::get('/{slug}/sistemi', [SistemiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('sistemi');
     Route::get('/{slug}/sistemi/{codice}', [SistemiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('sistemi.show');
     // Cassaforte delle credenziali: risposte JSON, "Mostra" solo con la password confermata da meno di 15 minuti
