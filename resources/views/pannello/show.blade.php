@@ -110,6 +110,7 @@
                     </div>
                     <div class="azioni">
                         <a class="btn" href="{{ route('progetti.show', [$progetto->slug, $m->codice]) }}">Progetto 4.0 e mappa</a>
+                        <a class="btn btn-sec" href="{{ route('certificazione', $progetto->slug) }}#c-{{ $m->codice }}">Certificazione</a>
                         <button type="button" class="btn btn-sec" data-apri-appunto="{{ $m->codice }}">+ Appunto su questa macchina</button>
                     </div>
                     @if ($m->dato('prossimo'))<div class="next"><b>Prossimo passo</b>{{ $m->dato('prossimo') }}</div>@endif

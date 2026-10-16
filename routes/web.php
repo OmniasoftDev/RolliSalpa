@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppuntiController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CertificazioneController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CompitiController;
 use App\Http\Controllers\CredenzialiController;
@@ -40,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/{slug}/workflow', [WorkflowController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('workflow');
     Route::get('/{slug}/progetti', [ProgettiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('progetti');
     Route::get('/{slug}/progetti/{codice}', [ProgettiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('progetti.show');
+    Route::get('/{slug}/certificazione', [CertificazioneController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('certificazione');
     Route::get('/{slug}/sistemi', [SistemiController::class, 'index'])->where('slug', '[a-z0-9-]+')->name('sistemi');
     Route::get('/{slug}/sistemi/{codice}', [SistemiController::class, 'show'])->where(['slug' => '[a-z0-9-]+', 'codice' => '[A-Za-z0-9_-]+'])->name('sistemi.show');
     // Cassaforte delle credenziali: risposte JSON, "Mostra" solo con la password confermata da meno di 15 minuti

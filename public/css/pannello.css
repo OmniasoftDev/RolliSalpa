@@ -464,3 +464,56 @@ a.btn { text-decoration: none; display: inline-block }
 .cred-accessi summary { cursor: pointer }
 .cred-dialogo { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 16px; width: min(92vw, 420px) }
 .cred-dialogo::backdrop { background: color-mix(in srgb, #000 45%, transparent) }
+/* Certificazione: cammino a tappe di ogni macchina (Francesco, 16/10/2026) */
+.cert-riepilogo { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px }
+.cert-colonna { display: grid; gap: 3px; justify-items: center; text-align: center; min-width: 0 }
+.cert-colonna-barra { width: 28px; height: 56px; background: var(--off-bg); border: 1px solid var(--line); border-radius: 4px; display: flex; align-items: flex-end; overflow: hidden }
+.cert-colonna-barra span { display: block; width: 100%; background: var(--ok) }
+.cert-colonna b { font: 600 1.15rem/1 var(--f-display); font-variant-numeric: tabular-nums }
+.cert-colonna b small { font-size: .75rem; color: var(--muted) }
+.cert-colonna > span { font-size: .72rem; line-height: 1.2; color: var(--muted) }
+.cert-barra-strumenti { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 18px }
+.cert-barra-strumenti .btn { text-decoration: none; padding: 5px 12px; font-size: .84rem }
+.cert-elenco { display: grid; gap: 14px }
+.cert-card { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 16px; display: grid; gap: 10px; min-width: 0 }
+.cert-card.a-rischio { border-left-color: var(--risk) }
+.cert-card.vuota { border-left-color: var(--off); background: var(--off-bg) }
+.cert-card h2 { font-size: 1.2rem; text-transform: none; letter-spacing: .01em; color: var(--ink) }
+.cert-testa { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 18px; align-items: flex-start }
+.cert-pct { display: grid; gap: 3px; min-width: 180px; justify-items: end }
+.cert-pct b { font: 600 1.5rem/1 var(--f-display); font-variant-numeric: tabular-nums }
+.cert-pct .pj-barra { width: 180px }
+.cert-sintesi { margin: 0; font-size: .92rem; color: var(--muted) }
+.cert-rischio { margin: 0; font-size: .9rem; color: var(--risk) }
+.cert-rischio b { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .06em; font-size: .75rem; margin-right: 6px }
+.cert-pallino { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 .74rem var(--f-mono); font-style: normal; border: 2px solid transparent; position: relative; z-index: 1 }
+.legend .cert-pallino { width: 14px; height: 14px; font-size: 0; margin-right: 4px; vertical-align: -2px; border-width: 1px }
+.cert-pallino.s-ok { background: var(--ok); color: var(--panel); border-color: var(--ok) }
+.cert-tappe { list-style: none; margin: 0; padding: 4px 0 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 0 }
+.cert-tappa { position: relative; min-width: 0 }
+.cert-tappa::after { content: ""; position: absolute; top: 12px; left: 50%; width: 100%; height: 3px; background: var(--line) }
+.cert-tappa:last-child::after { display: none }
+.cert-tappa.linea-piena::after { background: var(--ok) }
+.cert-tappa summary { list-style: none; cursor: pointer; display: grid; justify-items: center; text-align: center; gap: 3px; padding: 0 2px }
+.cert-tappa summary::-webkit-details-marker { display: none }
+.cert-tappa-titolo { font-size: .76rem; line-height: 1.2; color: var(--ink) }
+.cert-data { font: 500 .74rem var(--f-mono); color: var(--ink); font-variant-numeric: tabular-nums }
+.cert-data.prevista { color: var(--muted); font-style: italic }
+.cert-tappa-dettaglio { position: absolute; z-index: 5; top: 100%; left: 50%; transform: translateX(-50%); width: min(260px, 80vw); margin-top: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; box-shadow: 0 4px 14px color-mix(in srgb, var(--ink) 18%, transparent); display: grid; gap: 3px; font-size: .82rem; text-align: left }
+.cert-tappa:first-child .cert-tappa-dettaglio { left: 0; transform: none }
+.cert-tappa:last-child .cert-tappa-dettaglio { left: auto; right: 0; transform: none }
+.cert-piede { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px 18px; align-items: start }
+.cert-chi { display: block; font-size: .8rem; color: var(--muted) }
+.cert-manca b { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; color: var(--muted) }
+.cert-manca ul { margin: 2px 0 0; padding-left: 18px; font-size: .9rem; display: grid; gap: 3px }
+.cert-card .scaduto, .cert-manca li.scaduto .cert-chi { color: var(--risk) }
+.cert-link { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline }
+@media (max-width: 700px) {
+  .cert-tappe { grid-template-columns: minmax(0, 1fr); gap: 2px }
+  .cert-tappa::after { top: 26px; left: 12px; width: 3px; height: calc(100% - 22px) }
+  .cert-tappa summary { grid-template-columns: 26px minmax(0, 1fr) auto; justify-items: start; text-align: left; align-items: center; gap: 8px; padding: 2px 0 8px }
+  .cert-tappa-titolo { font-size: .88rem }
+  .cert-tappa-dettaglio, .cert-tappa:first-child .cert-tappa-dettaglio, .cert-tappa:last-child .cert-tappa-dettaglio { position: static; transform: none; width: auto; margin: 0 0 8px 34px; box-shadow: none }
+  .cert-piede { grid-template-columns: minmax(0, 1fr) }
+  .cert-pct { justify-items: start }
+}

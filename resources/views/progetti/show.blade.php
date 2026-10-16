@@ -24,6 +24,7 @@
 <div class="wrap progetto-pagina">
     <nav class="pj-nav" aria-label="Macchine">
         <a class="link-azione" href="{{ route('progetti', $progetto->slug) }}">‹ Tutti i progetti</a>
+        <a class="link-azione" href="{{ route('certificazione', $progetto->slug) }}#c-{{ $macchina->codice }}">Certificazione</a>
         <span class="pj-salti">
             @if ($prima)<a class="link-azione" href="{{ route('progetti.show', [$progetto->slug, $prima->codice]) }}">‹ {{ $prima->dato('num') }} {{ $prima->dato('nome') }}</a>@endif
             @if ($dopo)<a class="link-azione" href="{{ route('progetti.show', [$progetto->slug, $dopo->codice]) }}">{{ $dopo->dato('num') }} {{ $dopo->dato('nome') }} ›</a>@endif
