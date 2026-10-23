@@ -56,6 +56,10 @@
         </section>
     @endif
 
+    @if ($gantt)
+        @include('pubblico.gantt', ['g' => $gantt])
+    @endif
+
     <div class="pb-strumenti">
         <div class="filters" id="pb-filtro" role="group" aria-label="Filtro">
             <button type="button" class="btn" data-f="tutte" aria-pressed="true">Tutte ({{ $nMacchine }})</button>
@@ -160,6 +164,10 @@
                         @endif
                     </div>
                 @endif
+
+                @unless ($m['tecnici']['vuoto'])
+                    @include('pubblico.tecnici', ['tc' => $m['tecnici']])
+                @endunless
             </article>
         @empty
             <p class="empty">Nessuna macchina da mostrare.</p>

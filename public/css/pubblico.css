@@ -100,8 +100,99 @@
   .pb-strumenti .btn { flex: 1 1 auto }
 }
 
-/* Stampa A4: colori veri, niente filtri, card intere */
+/* Gantt del lavoro (23/10/2026): matrice macchine x settimane, colori come le frecce delle mappe */
+html { scroll-behavior: smooth }
+.pb-card { scroll-margin-top: 12px }
+.pb-gantt { --giallo: #c29a00; --arancio: #d9730d; --lab: 170px; --h-riga: 34px; --h-corsia: 24px; gap: 6px }
+.gt-titolo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px }
+.gt-scroll { overflow-x: auto; overscroll-behavior-x: contain; border: 1px solid var(--line); border-radius: 8px; -webkit-overflow-scrolling: touch }
+.gt { min-width: 860px; position: relative; font-size: .8rem }
+.gt-testa, .gt-riga { display: grid; grid-template-columns: var(--lab) minmax(0, 1fr) }
+.gt-testa { border-bottom: 1px solid var(--line); background: var(--off-bg) }
+.gt-etichetta { position: sticky; left: 0; z-index: 4; background: var(--panel); border-right: 1px solid var(--line); padding: 4px 8px; display: flex; align-items: center; gap: 6px; min-width: 0 }
+.gt-angolo { background: var(--off-bg); font: 600 .72rem var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted) }
+.gt-asse { position: relative; height: 38px }
+.gt-mesi span, .gt-settimane span { position: absolute; overflow: hidden; white-space: nowrap; padding-left: 4px; box-sizing: border-box }
+.gt-mesi span { top: 2px; font: 600 .72rem var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--ink); border-left: 1px solid var(--muted) }
+.gt-settimane span { top: 20px; font: 500 .68rem var(--f-mono); color: var(--muted) }
+.gt-corpo { position: relative }
+.gt-riga { min-height: var(--h-riga); border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none }
+a.gt-riga:hover .gt-etichetta, a.gt-riga:hover .gt-traccia { background: color-mix(in srgb, var(--accent) 7%, var(--panel)) }
+a.gt-riga:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px }
+.gt-num { font: 700 .78rem var(--f-mono); color: var(--accent); min-width: 20px }
+.gt-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem }
+.gt-riga-progetto { background: var(--off-bg); min-height: calc(var(--corsie, 1) * var(--h-corsia) + 8px) }
+.gt-riga-progetto .gt-etichetta { background: var(--off-bg); flex-direction: column; align-items: flex-start; justify-content: center; gap: 0 }
+.gt-riga-progetto .gt-traccia { background: var(--off-bg) }
+.gt-riga-progetto small { color: var(--muted); font-size: .68rem }
+.gt-traccia { position: relative; display: block; background: var(--panel) }
+.gt-seg { position: absolute; top: 7px; height: 20px; box-sizing: border-box; border-radius: 4px; border: 1px solid transparent; padding: 0 4px; font: 600 .66rem/18px var(--f-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; z-index: 2; cursor: default }
+.gt-seg.st-ok { background: var(--ok); border-color: var(--ok) }
+.gt-seg.st-corso { background: var(--giallo); border-color: var(--giallo) }
+.gt-seg.st-attesa { background: var(--arancio); border-color: var(--arancio) }
+.gt-seg.st-rischio { background: var(--risk); border-color: var(--risk) }
+.gt-seg.st-verificare { background: var(--muted); border-color: var(--muted) }
+.gt-seg.st-no, .gt-seg.st-na, .gt-seg.st-escluso { background: var(--panel); border: 1.5px dashed var(--muted); color: var(--muted) }
+.gt-seg.st-na, .gt-seg.st-escluso { opacity: .55 }
+.gt-seg.ritardo { box-shadow: 0 0 0 2px var(--risk); border-color: var(--risk) }
+.gt-seg.st-no.ritardo { border: 2px solid var(--risk); color: var(--risk) }
+.gt-fase { color: var(--ink) }
+.gt-fase.pl-fatto { background: var(--ok); border-color: var(--ok); color: #fff }
+.gt-fase.pl-corso { background: var(--giallo); border-color: var(--giallo); color: #fff }
+.gt-fase.pl-rischio { background: var(--risk); border-color: var(--risk); color: #fff }
+.gt-fase.pl-fisso { background: var(--run-bg); border: 1.5px solid var(--run); color: var(--run) }
+.gt-fase.pl-previsto { background: var(--panel); border: 1.5px dashed var(--muted); color: var(--ink) }
+.gt-rombo { position: absolute; top: 10px; width: 13px; height: 13px; margin-left: -6.5px; transform: rotate(45deg); background: var(--accent); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--accent); z-index: 3 }
+.gt-vuota { position: absolute; left: 8px; top: 9px; font-size: .74rem; color: var(--muted); font-style: italic }
+.gt-linee { position: absolute; top: 0; bottom: 0; left: var(--lab); right: 0; pointer-events: none; z-index: 3 }
+.gt-linee i { position: absolute; top: 0; bottom: 0; width: 0 }
+.gt-linee .gt-griglia { border-left: 1px dotted var(--line); z-index: 1 }
+.gt-linee .gt-oggi { border-left: 2px solid var(--accent); z-index: 3 }
+.gt-linee .gt-scadenza { border-left: 3px solid var(--risk); z-index: 3 }
+.gt-linee span { position: absolute; bottom: 2px; left: 3px; font: 700 .64rem var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; padding: 0 3px; border-radius: 3px; background: var(--panel) }
+.gt-oggi span { color: var(--accent) }
+.gt-scadenza span { color: var(--risk); left: auto; right: 4px }
+.gt-info { margin: 0; min-height: 1.4em; font-size: .86rem; color: var(--ink) }
+.gt-legenda { color: var(--ink) }
+.gt-leg { display: inline-block; width: 22px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1px solid transparent; box-sizing: border-box }
+.gt-leg.st-ok, .gt-leg.pl-fatto { background: var(--ok) }
+.gt-leg.st-corso, .gt-leg.pl-corso { background: #c29a00 }
+.gt-leg.st-attesa { background: #d9730d }
+.gt-leg.st-rischio, .gt-leg.pl-rischio { background: var(--risk) }
+.gt-leg.st-verificare { background: var(--muted) }
+.gt-leg.st-no, .gt-leg.pl-previsto { border: 1.5px dashed var(--muted) }
+.gt-leg.ritardo { box-shadow: 0 0 0 2px var(--risk) }
+.gt-leg.pl-fisso { background: var(--run-bg); border: 1.5px solid var(--run) }
+.gt-leg-rombo { display: inline-block; width: 10px; height: 10px; transform: rotate(45deg); background: var(--accent); margin: 0 7px 0 3px }
+.gt-leg-linea { display: inline-block; width: 0; height: 14px; margin-right: 6px; vertical-align: -2px }
+.gt-leg-linea.oggi { border-left: 2px solid var(--accent) }
+.gt-leg-linea.scad { border-left: 3px solid var(--risk) }
+.gt-leg-sep { font-weight: 600 }
+@media (max-width: 600px) { .pb-gantt { --lab: 118px } .gt { min-width: 760px } .gt-nome { font-size: .74rem } }
+
+/* Dati tecnici nella card */
+.pb-tecnici { border-top: 1px dashed var(--line); padding-top: 8px; min-width: 0 }
+.pb-tecnici > summary { cursor: pointer; font: 600 .82rem var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--accent) }
+.pb-tecnici-corpo { display: grid; gap: 10px; margin-top: 8px; min-width: 0 }
+.pb-tecnici h3 { font: 600 .9rem var(--f-display); margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.pb-tecnici h3 small { font: 400 .8rem var(--f-body); color: var(--muted) }
+.pb-dl { display: grid; grid-template-columns: minmax(80px, max-content) minmax(0, 1fr); gap: 3px 12px; margin: 0; font-size: .86rem }
+.pb-dl dt { color: var(--muted); font-weight: 600 }
+.pb-dl dd { margin: 0; overflow-wrap: anywhere; min-width: 0 }
+.pb-pagina-scada { display: block }
+.pb-tab-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px }
+.pb-tab { border-collapse: collapse; width: 100%; min-width: 0; font-size: .8rem }
+.pb-tab caption { text-align: left; font: 600 .78rem var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 8px 2px }
+.pb-tab th { text-align: left; font-size: .7rem; padding: 4px 8px; white-space: nowrap }
+.pb-tab td { text-align: left; padding: 4px 8px; vertical-align: top; overflow-wrap: anywhere }
+.pb-stato-chip { display: inline-block; font-size: .7rem; padding: 0 6px; border-radius: 8px; border: 1px solid transparent; white-space: nowrap }
+.pb-collegamenti { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; font-size: .86rem }
+.pb-collegamenti li { display: grid; gap: 1px; justify-items: start }
+.pb-verso { font-size: .82rem }
+
+/* Stampa A4: colori veri, niente filtri, card intere; il Gantt su una pagina A4 orizzontale */
 @page { size: A4; margin: 12mm }
+@page orizzontale { size: A4 landscape; margin: 10mm }
 @media print {
   body.pb-body { color-scheme: light; --bg: #fff; --panel: #fff; --ink: #17212b; --muted: #5b6874; --line: #d3dae0; --accent: #1f5f8b;
     --ok: #2e8540; --ok-bg: #dcefe0; --run: #1f6fb2; --run-bg: #dbe9f6; --wait: #a86a00; --wait-bg: #f7e9cc;
@@ -115,4 +206,10 @@
   .pb-card[hidden] { display: grid }
   .pb-nessuna { display: none }
   .pb-legenda { break-inside: avoid }
+  .pb-gantt { page: orizzontale; break-after: page; break-inside: avoid }
+  .gt-scroll { overflow: visible; border: 0 }
+  .gt { min-width: 0 }
+  .gt-info { display: none }
+  .pb-tecnici-corpo { display: none }
+  .pb-tecnici[open] .pb-tecnici-corpo { display: grid }
 }
