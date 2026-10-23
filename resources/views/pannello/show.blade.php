@@ -68,7 +68,7 @@
         </div>
     </header>
 
-    <div class="azioni"><button type="button" class="btn" data-apri-appunto="">+ Nuovo appunto</button></div>
+    <div class="azioni"><button type="button" class="btn" data-apri-appunto="">+ Nuovo appunto</button>@include('pannello.link-pubblico')</div>
     @include('pannello.appunto-form')
 
     @if ($progetto->info('richiesta') || $progetto->info('posizione'))

@@ -643,3 +643,12 @@ a.btn { text-decoration: none; display: inline-block }
 /* Domande dallo SCADA */
 .sc-dom-lista { margin: 6px 0; padding-left: 18px; display: grid; gap: 4px }
 .sc-dom-lista .num { margin-right: 4px }
+/* Link pubblico nel quadro (23/10/2026) */
+.link-pubblico { position: relative }
+.link-pubblico > summary { list-style: none; display: inline-block }
+.link-pubblico > summary::-webkit-details-marker { display: none }
+.link-pubblico-corpo { margin-top: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; max-width: 640px; font-size: .9rem }
+.link-pubblico-corpo p { margin: 0 }
+.link-pubblico-riga { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center }
+.link-pubblico-riga input { flex: 1 1 260px; min-width: 0; font: .82rem var(--f-mono); padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--off-bg); color: var(--ink) }
+.link-pubblico-riga .btn { width: auto; padding: 5px 12px }

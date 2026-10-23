@@ -1,0 +1,118 @@
+/* Area pubblica "stato avanzamento" (23/10/2026). Usa i colori e le classi di stato di pannello.css
+   (cert-pallino, sc-badge, rq-cella-leg); qui solo il layout della pagina standalone. */
+.pb-body { padding-top: 18px }
+.pb-pagina { max-width: 1240px; gap: 20px }
+.pb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+
+/* Testata */
+.pb-testa { display: grid; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line) }
+.pb-marchio { display: flex; align-items: center; gap: 8px; font: 600 .8rem var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.pb-logo { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--panel); font: 700 .8rem var(--f-display) }
+.pb-testa-riga { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px 28px }
+.pb-titolo { display: grid; gap: 4px; min-width: 0; max-width: 72ch }
+.pb-testa h1 { font-size: clamp(1.5rem, 4.2vw, 2.2rem); line-height: 1.1 }
+.pb-testa h1 span { color: var(--muted); font-weight: 500 }
+.pb-agg { margin: 0; font-size: .9rem; color: var(--muted) }
+.pb-agg b { color: var(--ink) }
+.pb-sintesi { margin: 4px 0 0; font-size: 1rem; padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px }
+
+.pb-riquadro { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; gap: 8px }
+.pb-riquadro h2 { font-size: .9rem }
+.pb-riepilogo { border: 0; padding: 0; background: none }
+
+.pb-strumenti { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px }
+.pb-strumenti .btn { width: auto; padding: 5px 12px; font-size: .86rem }
+.pb-vai-legenda { font-size: .88rem }
+
+/* Card per macchina */
+.pb-griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 540px), 1fr)); gap: 16px; align-items: start }
+.pb-card { container-type: inline-size; background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--ok); border-radius: 10px; padding: 14px 16px; display: grid; gap: 12px; min-width: 0; box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 6%, transparent) }
+.pb-card.in-ritardo { border-top-color: var(--wait) }
+.pb-card.bloccata { border-top-color: var(--risk) }
+.pb-card.vuota { border-top-color: var(--off); background: var(--off-bg) }
+.pb-card[hidden] { display: none }
+.pb-card-testa { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start }
+.pb-num { display: inline-grid; place-items: center; min-width: 38px; height: 38px; padding: 0 6px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: var(--accent); font: 700 1rem var(--f-mono) }
+.pb-nome { min-width: 0 }
+.pb-card h2 { font-size: 1.22rem; line-height: 1.15; text-transform: none; letter-spacing: .01em; color: var(--ink) }
+.pb-forn { display: block; font-size: .85rem; color: var(--muted) }
+.pb-pct { display: grid; gap: 4px; justify-items: end; min-width: 110px }
+.pb-pct b { font: 700 1.6rem/1 var(--f-display); font-variant-numeric: tabular-nums }
+.pb-pct .pj-barra { width: 110px }
+.pb-segnali { display: flex; flex-wrap: wrap; gap: 6px }
+.pb-segnale { font: 600 .74rem var(--f-display); letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px }
+.pb-segnale.bloccata { background: var(--risk-bg); color: var(--risk) }
+.pb-segnale.ritardo { background: var(--wait-bg); color: var(--wait) }
+.pb-stato { margin: 0; font-size: .97rem }
+.pb-vuota { margin: 0; font-size: .9rem; color: var(--muted) }
+
+/* Stepper delle tappe: orizzontale, verticale quando la card e' stretta */
+.pb-tappe { list-style: none; margin: 0; padding: 4px 0 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)) }
+.pb-tappa { position: relative; min-width: 0; display: grid; justify-items: center; text-align: center; gap: 3px; padding: 0 2px }
+.pb-tappa::after { content: ""; position: absolute; top: 12px; left: 50%; width: 100%; height: 3px; background: var(--line) }
+.pb-tappa:last-child::after { display: none }
+.pb-tappa.linea-piena::after { background: var(--ok) }
+.pb-tappa-titolo { font-size: .74rem; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere }
+.pb-data { font: 500 .72rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--ink) }
+.pb-data.prevista { color: var(--muted); font-style: italic }
+.pb-data.scaduto, .pb-card .scaduto { color: var(--risk) }
+@container (max-width: 520px) {
+  .pb-tappe { grid-template-columns: minmax(0, 1fr) }
+  .pb-tappa { grid-template-columns: 26px minmax(0, 1fr) auto; justify-items: start; text-align: left; align-items: center; gap: 10px; padding: 0 0 8px }
+  .pb-tappa::after { top: 26px; left: 12px; width: 3px; height: calc(100% - 26px) }
+  .pb-tappa-titolo { font-size: .9rem }
+  .pb-data { font-size: .8rem }
+  .pb-card-testa { grid-template-columns: auto minmax(0, 1fr) }
+  .pb-pct { grid-column: 1 / -1; grid-template-columns: auto minmax(0, 1fr); align-items: center; justify-items: start; gap: 10px }
+  .pb-pct .pj-barra { width: 100% }
+}
+
+.pb-righe { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line) }
+.pb-riga { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: .92rem }
+.pb-etichetta { font: 600 .74rem var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); min-width: 92px }
+.pb-visto { font-size: .82rem; color: var(--muted) }
+.pb-req { display: flex; flex-wrap: wrap; gap: 3px }
+.pb-chip { width: auto; min-width: 28px; padding: 0 4px; margin-right: 0; height: 20px; font-size: .7rem }
+.legend .pb-chip { min-width: 20px; height: 16px; margin-right: 4px }
+
+.pb-piede { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px 18px; align-items: start; background: var(--off-bg); border-radius: 8px; padding: 10px 12px }
+@container (max-width: 520px) { .pb-piede { grid-template-columns: minmax(0, 1fr) } }
+.pb-prossimo, .pb-manca { display: grid; gap: 2px; font-size: .92rem; min-width: 0 }
+.pb-prossimo b, .pb-manca b { font: 600 .76rem var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--muted) }
+.pb-manca ul { margin: 2px 0 0; padding-left: 18px; display: grid; gap: 4px }
+.pb-chi { display: block; font-size: .8rem; color: var(--muted) }
+.pb-manca li.scaduto .pb-chi { color: var(--risk); font-weight: 600 }
+
+/* Legenda e piede */
+.pb-legenda h3 { font: 600 .95rem var(--f-display); margin: 0 0 2px }
+.pb-legenda p { margin: 0 0 6px; font-size: .88rem; color: var(--muted) }
+.pb-legenda-griglia { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px 24px }
+.pb-legenda .legend { color: var(--ink) }
+.pb-req-nomi { margin: 8px 0 0; padding: 0; list-style: none; columns: 2 180px; column-gap: 16px; font-size: .82rem }
+.pb-req-nomi li { break-inside: avoid; margin-bottom: 2px }
+.pb-req-nomi b { font-family: var(--f-mono); font-size: .76rem; margin-right: 4px }
+.pb-piede-pagina { font-size: .8rem; color: var(--muted); text-align: center; padding: 8px 0 0 }
+
+@media (max-width: 600px) {
+  .pb-testa-riga { align-items: stretch }
+  .pb-testa .gauges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100% }
+  .pb-testa .gauge { min-width: 0 }
+  .pb-strumenti .btn { flex: 1 1 auto }
+}
+
+/* Stampa A4: colori veri, niente filtri, card intere */
+@page { size: A4; margin: 12mm }
+@media print {
+  body.pb-body { color-scheme: light; --bg: #fff; --panel: #fff; --ink: #17212b; --muted: #5b6874; --line: #d3dae0; --accent: #1f5f8b;
+    --ok: #2e8540; --ok-bg: #dcefe0; --run: #1f6fb2; --run-bg: #dbe9f6; --wait: #a86a00; --wait-bg: #f7e9cc;
+    --risk: #b3261e; --risk-bg: #f6dcda; --off: #c3ccd4; --off-bg: #f3f5f7 }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
+  body.pb-body { background: #fff; padding: 0; font-size: 12px }
+  .pb-strumenti { display: none }
+  .pb-pagina { max-width: none; gap: 10px }
+  .pb-griglia { grid-template-columns: minmax(0, 1fr); gap: 8px }
+  .pb-card { break-inside: avoid; box-shadow: none; padding: 8px 10px; gap: 6px }
+  .pb-card[hidden] { display: grid }
+  .pb-nessuna { display: none }
+  .pb-legenda { break-inside: avoid }
+}

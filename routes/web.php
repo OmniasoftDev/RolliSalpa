@@ -10,6 +10,7 @@ use App\Http\Controllers\ImpiantoController;
 use App\Http\Controllers\LavoroController;
 use App\Http\Controllers\PannelloController;
 use App\Http\Controllers\ProgettiController;
+use App\Http\Controllers\PubblicoController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\RequisitiController;
 use App\Http\Controllers\ScadaController;
@@ -21,6 +22,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:10,1');
 });
+
+// Area pubblica in sola lettura (23/10/2026): link segreto, niente login; chiave sbagliata o area spenta = 404
+Route::get('/{slug}/avanzamento/{chiave}', [PubblicoController::class, 'show'])
+    ->where(['slug' => '[a-z0-9-]+', 'chiave' => '[A-Za-z0-9]{1,64}'])->middleware('throttle:60,1')->name('pubblico');
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
